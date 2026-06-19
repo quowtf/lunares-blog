@@ -1,27 +1,32 @@
 import { getFileKey, getFilePrefix as getDocPrefix } from '@payloadcms/plugin-cloud-storage/utilities'
 import { BlobNotFoundError, get } from '@vercel/blob'
-import { headersWithCors, type PayloadRequest, type TypeWithID } from 'payload'
+import { headersWithCors, type CollectionConfig, type PayloadRequest, type TypeWithID } from 'payload'
 
 import { getBlobReadWriteToken, getBlobStoreAccess } from './blobStorage'
+
+type HandlerArgs = {
+  doc: TypeWithID
+  headers?: Headers
+  params: {
+    clientUploadContext?: unknown
+    collection: string
+    filename: string
+    prefix?: string
+  }
+}
 
 /**
  * Private Vercel Blob stores require authenticated reads. Payload's default
  * vercel-blob adapter fetches file bytes with an unauthenticated fetch(), which
  * returns 204. This handler runs first and streams blobs via the SDK get().
+ *
+ * Must not be async at the top level: Payload expects `void | Response |
+ * Promise<void> | Promise<Response>`, not `Promise<void | Response>`.
  */
-export async function vercelPrivateBlobFileHandler(
+export function vercelPrivateBlobFileHandler(
   req: PayloadRequest,
-  args: {
-    doc: TypeWithID
-    headers?: Headers
-    params: {
-      clientUploadContext?: unknown
-      collection: string
-      filename: string
-      prefix?: string
-    }
-  },
-): Promise<Response | void> {
+  args: HandlerArgs,
+): void | Promise<Response> {
   if (getBlobStoreAccess() !== 'private') return
 
   const token = getBlobReadWriteToken()
@@ -33,6 +38,17 @@ export async function vercelPrivateBlobFileHandler(
   )
 
   if (!collectionConfig) return
+
+  return streamPrivateBlob(req, args, collectionConfig, token)
+}
+
+async function streamPrivateBlob(
+  req: PayloadRequest,
+  args: HandlerArgs,
+  collectionConfig: CollectionConfig,
+  token: string,
+): Promise<Response> {
+  const { filename } = args.params
 
   try {
     const docPrefix = await getDocPrefix({
