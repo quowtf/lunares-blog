@@ -71,6 +71,8 @@ export function shouldUseUnoptimizedImage(
 
   if (isNonOptimizableImage(src, mimeType)) return true
 
+  if (src.includes('.blob.vercel-storage.com')) return true
+
   if (src.startsWith('/api/media/')) return true
 
   try {

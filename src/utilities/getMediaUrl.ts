@@ -70,6 +70,18 @@ export const getMediaUrl = (url: string | null | undefined, cacheTag?: string | 
   return appendCacheTag(resolved, cacheTag)
 }
 
+function getVercelBlobHostnames(): string[] {
+  const access = process.env.BLOB_STORE_ACCESS === 'private' ? 'private' : 'public'
+  const hostnames = new Set<string>([`**.${access}.blob.vercel-storage.com`])
+
+  const storeId = process.env.BLOB_READ_WRITE_TOKEN?.match(/^vercel_blob_rw_([a-z\d]+)_/i)?.[1]
+  if (storeId) {
+    hostnames.add(`${storeId.toLowerCase()}.${access}.blob.vercel-storage.com`)
+  }
+
+  return Array.from(hostnames)
+}
+
 export function getMediaRemotePatterns(): { hostname: string; protocol: 'http' | 'https' }[] {
   const candidates = [
     process.env.NEXT_PUBLIC_MEDIA_URL,
@@ -88,6 +100,10 @@ export function getMediaRemotePatterns(): { hostname: string; protocol: 'http' |
     } catch {
       // ignore invalid URLs
     }
+  }
+
+  for (const hostname of getVercelBlobHostnames()) {
+    patterns.set(hostname, 'https')
   }
 
   return Array.from(patterns.entries()).map(([hostname, protocol]) => ({
