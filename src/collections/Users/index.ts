@@ -1,5 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
+import { enforceFriendDefaults } from './hooks/beforeChange'
+
 export const Users: CollectionConfig = {
   slug: 'users',
 
@@ -68,6 +70,10 @@ export const Users: CollectionConfig = {
       ],
     },
   ],
+
+  hooks: {
+    beforeChange: [enforceFriendDefaults],
+  },
 
   timestamps: true,
 }

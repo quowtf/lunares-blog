@@ -1,6 +1,6 @@
 import { getFileKey, getFilePrefix as getDocPrefix } from '@payloadcms/plugin-cloud-storage/utilities'
 import { BlobNotFoundError, get } from '@vercel/blob'
-import { headersWithCors, type PayloadRequest } from 'payload'
+import { headersWithCors, type PayloadRequest, type TypeWithID } from 'payload'
 
 import { getBlobReadWriteToken, getBlobStoreAccess } from './blobStorage'
 
@@ -12,7 +12,7 @@ import { getBlobReadWriteToken, getBlobStoreAccess } from './blobStorage'
 export async function vercelPrivateBlobFileHandler(
   req: PayloadRequest,
   args: {
-    doc: { prefix?: string | null }
+    doc: TypeWithID
     headers?: Headers
     params: {
       clientUploadContext?: unknown

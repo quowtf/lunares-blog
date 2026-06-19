@@ -223,3 +223,47 @@ html[data-theme='dark'],
 html[data-theme='light'] {
   opacity: initial;
 }
+
+@layer utilities {
+  @keyframes comment-panel-enter {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes comment-panel-exit {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+      max-height: 12rem;
+      margin-top: 0.75rem;
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+    }
+
+    to {
+      opacity: 0;
+      transform: translateY(-4px);
+      max-height: 0;
+      margin-top: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      border-width: 0;
+    }
+  }
+
+  .comment-panel-enter {
+    animation: comment-panel-enter 280ms ease-out both;
+  }
+
+  .comment-panel-exit {
+    animation: comment-panel-exit 400ms ease-in both;
+    pointer-events: none;
+  }
+}

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import { ArchiveHero, ArchivePostCard, Masonry, MonthDivider } from '@/components/archive'
+import { CommentLayout } from '@/components/comments'
 import { archivePostSelect, groupPostsByMonthWithIndex } from '@/utilities/archive'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
@@ -13,29 +14,31 @@ export default async function HomePage() {
   const monthGroups = groupPostsByMonthWithIndex(posts)
 
   return (
-    <main className="min-h-screen bg-stone-50 px-4 py-12 text-stone-950 sm:px-6 lg:px-10">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10">
-        <ArchiveHero />
+    <CommentLayout>
+      <main className="min-h-screen bg-stone-50 px-4 py-12 text-stone-950 sm:px-6 lg:px-10">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-10">
+          <ArchiveHero />
 
-        {monthGroups.length > 0 ? (
-          monthGroups.map((group) => (
-            <section className="space-y-6" key={group.monthKey}>
-              <MonthDivider>{group.month}</MonthDivider>
+          {monthGroups.length > 0 ? (
+            monthGroups.map((group) => (
+              <section className="space-y-6" key={group.monthKey}>
+                <MonthDivider>{group.month}</MonthDivider>
 
-              <Masonry>
-                {group.items.map(({ post, index }) => (
-                  <div className="mb-4 break-inside-avoid" key={post.id}>
-                    <ArchivePostCard post={post} index={index} priority={index < 2} />
-                  </div>
-                ))}
-              </Masonry>
-            </section>
-          ))
-        ) : (
-          <EmptyState />
-        )}
-      </div>
-    </main>
+                <Masonry>
+                  {group.items.map(({ post, index }) => (
+                    <div className="mb-4 break-inside-avoid" key={post.id}>
+                      <ArchivePostCard post={post} index={index} priority={index < 2} />
+                    </div>
+                  ))}
+                </Masonry>
+              </section>
+            ))
+          ) : (
+            <EmptyState />
+          )}
+        </div>
+      </main>
+    </CommentLayout>
   )
 }
 

@@ -258,6 +258,7 @@ export function ArchivePostCard({ post, index = 0, priority = false }: ArchivePo
           date={formatArchiveDate(post.publishedAt ?? post.createdAt)}
           index={index}
           label={getCategoryLabel(post)}
+          postId={post.id}
           priority={priority}
           title={post.title}
         />
