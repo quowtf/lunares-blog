@@ -1,4 +1,9 @@
 export { formatArchiveDate } from './formatArchiveDate'
+export { formatPostMetaDate } from './formatPostMetaDate'
+export { getAdjacentPosts } from './getAdjacentPosts'
+export { getPostCategory, getPostCategoryLabel } from './getPostCategory'
+export { getPostPlainText } from './getPostPlainText'
+export { getReadingTime, getReadingTimeLabel } from './getReadingTime'
 export { getGalleryImagesFromPost } from './getGalleryImagesFromPost'
 export { getPostExcerpt } from './getPostExcerpt'
 export {

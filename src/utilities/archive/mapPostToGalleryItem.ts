@@ -3,6 +3,7 @@ import type { CardVariant, GalleryItem, SlidesItem } from '@/types/archive'
 import { getVariantByIndex } from '@/components/archive/ui/card/card-variants'
 import { formatArchiveDate } from './formatArchiveDate'
 import { getGalleryImagesFromPost } from './getGalleryImagesFromPost'
+import { getPostCategory } from './getPostCategory'
 import { getPostExcerpt } from './getPostExcerpt'
 
 export type GalleryPostData = Pick<
@@ -25,16 +26,7 @@ type MapOptions = {
 }
 
 function getSlidesLabel(post: GalleryPostData): string | undefined {
-  const firstCategory = post.categories?.find(
-    (item): item is Extract<typeof item, { title?: string | null }> =>
-      typeof item === 'object' && item !== null,
-  )
-
-  if (typeof firstCategory === 'object' && firstCategory?.title) {
-    return firstCategory.title
-  }
-
-  return 'Image'
+  return getPostCategory(post) ?? 'Image'
 }
 
 /** PostType gallery: solo las imágenes. */

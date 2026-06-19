@@ -2,6 +2,7 @@ import type { Post } from '@/payload-types'
 import type { CardVariant, ImageItem } from '@/types/archive'
 import { getVariantByIndex } from '@/components/archive/ui/card/card-variants'
 import { formatArchiveDate } from './formatArchiveDate'
+import { getPostCategory } from './getPostCategory'
 import { mediaToImageAsset } from './mediaToImageAsset'
 
 export type ImagePostData = Pick<
@@ -23,11 +24,9 @@ type MapPostToImageItemOptions = {
 }
 
 function getPostLabel(post: ImagePostData): string | undefined {
-  const firstCategory = post.categories?.[0]
+  const category = getPostCategory(post)
 
-  if (typeof firstCategory === 'object' && firstCategory?.title) {
-    return firstCategory.title
-  }
+  if (category) return category
 
   if (post.PostType) {
     return post.PostType.charAt(0).toUpperCase() + post.PostType.slice(1)

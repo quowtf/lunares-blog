@@ -1,14 +1,15 @@
 import type { Metadata } from 'next'
 
-import { RelatedPosts } from '@/blocks/RelatedPosts/Component'
+import { PostView } from '@/components/archive/post-view'
+import { CommentLayout } from '@/components/comments'
 import { PayloadRedirects } from '@/components/PayloadRedirects'
-import RichText from '@/components/RichText'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
-import { PostHero } from '@/heros/PostHero'
 import { RenderBlocks } from '@/blocks/RenderBlocks'
 import { RenderHero } from '@/heros/RenderHero'
 import { homeStatic } from '@/endpoints/seed/home-static'
 import { generateMeta } from '@/utilities/generateMeta'
+import { archivePostSelect, getAdjacentPosts } from '@/utilities/archive'
+import type { ArchivePostData } from '@/components/archive/archive-post-card'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import { draftMode } from 'next/headers'
@@ -59,6 +60,18 @@ type Args = {
   }>
 }
 
+function isEditorialPost(post: Post): boolean {
+  return post.PostType === 'post' || post.PostType == null
+}
+
+function getRelatedPosts(post: Post): ArchivePostData[] {
+  const related = post.relatedPosts ?? []
+
+  return related
+    .filter((item): item is Post => typeof item === 'object' && item !== null)
+    .slice(0, 3) as ArchivePostData[]
+}
+
 export default async function Page({ params: paramsPromise }: Args) {
   const { isEnabled: draft } = await draftMode()
   const { slug = 'home' } = await paramsPromise
@@ -79,25 +92,22 @@ export default async function Page({ params: paramsPromise }: Args) {
   }
 
   const post = await queryPostBySlug({ slug: decodedSlug })
-  if (post) {
+  if (post && isEditorialPost(post)) {
+    const [adjacent, fallbackRelated] = await Promise.all([
+      getAdjacentPosts(post.slug),
+      queryFallbackRelatedPosts({ excludeSlug: post.slug }),
+    ])
+
+    const related = getRelatedPosts(post)
+    const relatedPosts = related.length > 0 ? related : fallbackRelated
+
     return (
-      <article className="pt-16 pb-16">
-        <PageClient theme="dark" />
+      <CommentLayout>
+        <PageClient theme="light" />
         <PayloadRedirects disableNotFound url={url} />
         {draft && <LivePreviewListener />}
-        <PostHero post={post} />
-        <div className="flex flex-col items-center gap-4 pt-8">
-          <div className="container">
-            <RichText className="max-w-[48rem] mx-auto" data={post.content} enableGutter={false} />
-            {post.relatedPosts && post.relatedPosts.length > 0 && (
-              <RelatedPosts
-                className="mt-12 max-w-[52rem] lg:grid lg:grid-cols-subgrid col-start-1 col-span-3 grid-rows-[2fr]"
-                docs={post.relatedPosts.filter((item) => typeof item === 'object')}
-              />
-            )}
-          </div>
-        </div>
-      </article>
+        <PostView adjacent={adjacent} post={post} related={relatedPosts} />
+      </CommentLayout>
     )
   }
 
@@ -158,10 +168,11 @@ const queryPostBySlug = cache(async ({ slug }: { slug: string }) => {
 
   const result = await payload.find({
     collection: 'posts',
+    depth: 2,
     draft,
     limit: 1,
-    overrideAccess: draft,
     pagination: false,
+    overrideAccess: draft,
     where: {
       slug: {
         equals: slug,
@@ -171,3 +182,27 @@ const queryPostBySlug = cache(async ({ slug }: { slug: string }) => {
 
   return (result.docs?.[0] as Post | undefined) || null
 })
+
+async function queryFallbackRelatedPosts({ excludeSlug }: { excludeSlug: string }) {
+  const payload = await getPayload({ config: configPromise })
+
+  const result = await payload.find({
+    collection: 'posts',
+    depth: 1,
+    draft: false,
+    limit: 3,
+    overrideAccess: false,
+    sort: '-publishedAt',
+    select: archivePostSelect,
+    where: {
+      and: [
+        { slug: { not_equals: excludeSlug } },
+        {
+          or: [{ PostType: { equals: 'post' } }, { PostType: { exists: false } }],
+        },
+      ],
+    },
+  })
+
+  return result.docs as ArchivePostData[]
+}

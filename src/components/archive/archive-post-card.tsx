@@ -11,6 +11,8 @@ import {
   archivePostSelect,
   formatArchiveDate,
   getPostExcerpt,
+  getPostCategory,
+  getReadingTimeLabel,
   mapPostToGalleryItem,
   mapPostToImageItem,
   mapPostToSlidesItem,
@@ -37,24 +39,12 @@ function getPostHref(slug: string): string {
 }
 
 function getCategoryLabel(post: ArchivePostData): string {
-  const category = post.categories?.find(
-    (item): item is Extract<typeof item, { title?: string | null }> =>
-      typeof item === 'object' && item !== null,
-  )
+  const category = getPostCategory(post)
 
-  if (category?.title) return category.title
+  if (category) return category
   if (post.PostType) return post.PostType.charAt(0).toUpperCase() + post.PostType.slice(1)
 
   return 'Post'
-}
-
-function getReadingTime(text: string): string | null {
-  if (!text) return null
-
-  const words = text.split(/\s+/).filter(Boolean).length
-  const minutes = Math.max(1, Math.ceil(words / 200))
-
-  return `${minutes} min read`
 }
 
 function canRenderGallery(
@@ -144,7 +134,7 @@ function DefaultPostCard({
   const label = getCategoryLabel(post)
   const date = formatArchiveDate(post.publishedAt ?? post.createdAt)
   const excerpt = getPostExcerpt(post)
-  const readingTime = getReadingTime(excerpt)
+  const readingTime = getReadingTimeLabel(excerpt)
   const variant = getVariantByIndex(index)
 
   const variantClasses = {
