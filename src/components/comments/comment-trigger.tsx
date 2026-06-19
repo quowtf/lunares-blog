@@ -1,5 +1,7 @@
 'use client'
 
+import { X } from 'lucide-react'
+
 import { CommentIcon } from '@/components/archive/ui'
 import { cn } from '@/utilities/ui'
 
@@ -27,16 +29,16 @@ export function CommentTrigger({ postId, className }: CommentTriggerProps) {
   return (
     <button
       aria-expanded={isActive}
-      aria-label="Comentar"
+      aria-label={isActive ? 'Cerrar comentarios' : 'Comentar'}
       className={cn(
-        'rounded-sm transition hover:text-stone-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-300',
-        isActive ? 'text-stone-700' : 'text-stone-400',
+        'rounded-sm transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        isActive ? 'text-foreground' : 'text-muted-foreground',
         className,
       )}
       onClick={() => toggleComments(postId)}
       type="button"
     >
-      <CommentIcon className="h-4 w-4 shrink-0" />
+      {isActive ? <X className="h-4 w-4 shrink-0" /> : <CommentIcon className="h-4 w-4 shrink-0" />}
     </button>
   )
 }

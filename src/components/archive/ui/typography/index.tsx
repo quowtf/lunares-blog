@@ -11,7 +11,7 @@ export function Eyebrow({ children, className }: TypographyProps) {
   return (
     <p
       className={cn(
-        'text-[0.65rem] font-medium uppercase tracking-[0.18em] text-stone-500',
+        'text-[0.65rem] font-medium uppercase tracking-[0.18em] text-muted-foreground',
         className,
       )}
     >
@@ -21,17 +21,19 @@ export function Eyebrow({ children, className }: TypographyProps) {
 }
 
 export function Meta({ children, className }: TypographyProps) {
-  return <p className={cn('text-xs leading-5 text-stone-500', className)}>{children}</p>
+  return <p className={cn('text-xs leading-5 text-muted-foreground', className)}>{children}</p>
 }
 
 export function CardTitle({ children, className }: TypographyProps) {
   return (
-    <h2 className={cn('font-serif text-xl leading-tight tracking-tight text-stone-950', className)}>
+    <h2
+      className={cn('font-serif text-xl leading-tight tracking-tight text-foreground', className)}
+    >
       {children}
     </h2>
   )
 }
 
 export function CardSubtitle({ children, className }: TypographyProps) {
-  return <p className={cn('text-sm leading-5 text-stone-600', className)}>{children}</p>
+  return <p className={cn('text-sm leading-5 text-muted-foreground', className)}>{children}</p>
 }

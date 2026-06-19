@@ -36,12 +36,12 @@ export default async function Page({ searchParams: searchParamsPromise }: Args) 
   })
 
   return (
-    <main className="min-h-screen bg-stone-50 px-4 py-12 text-stone-950 sm:px-6 lg:px-10">
+    <main className="min-h-screen bg-background px-4 py-12 text-foreground sm:px-6 lg:px-10">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10">
         <ArchiveHero />
 
         <section className="space-y-6">
-          <h2 className="font-serif text-lg tracking-tight text-stone-900">
+          <h2 className="font-serif text-lg tracking-tight text-foreground">
             {query ? `Resultados para "${query}"` : 'Buscar'}
           </h2>
 
@@ -49,13 +49,19 @@ export default async function Page({ searchParams: searchParamsPromise }: Args) 
             <Masonry>
               {posts.docs.map((post, index) => (
                 <div className="mb-4 break-inside-avoid" key={post.id}>
-                  <ArchivePostCard post={post as ArchivePostData} index={index} priority={index < 2} />
+                  <ArchivePostCard
+                    post={post as ArchivePostData}
+                    index={index}
+                    priority={index < 2}
+                  />
                 </div>
               ))}
             </Masonry>
           ) : (
-            <p className="text-sm text-stone-600">
-              {query ? 'No se encontraron resultados.' : 'Escribe algo en el buscador para empezar.'}
+            <p className="text-sm text-muted-foreground">
+              {query
+                ? 'No se encontraron resultados.'
+                : 'Escribe algo en el buscador para empezar.'}
             </p>
           )}
         </section>
@@ -64,7 +70,9 @@ export default async function Page({ searchParams: searchParamsPromise }: Args) 
   )
 }
 
-export async function generateMetadata({ searchParams: searchParamsPromise }: Args): Promise<Metadata> {
+export async function generateMetadata({
+  searchParams: searchParamsPromise,
+}: Args): Promise<Metadata> {
   const { q } = await searchParamsPromise
 
   return {

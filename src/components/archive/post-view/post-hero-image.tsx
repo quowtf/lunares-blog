@@ -17,7 +17,7 @@ export function PostHeroImage({ image }: PostHeroImageProps) {
 
   return (
     <figure className="w-full">
-      <div className="relative overflow-hidden rounded-2xl bg-stone-200">
+      <div className="relative overflow-hidden rounded-2xl bg-muted">
         <Media
           imgClassName="object-cover"
           pictureClassName="relative block aspect-[4/3] w-full min-h-[16rem] sm:aspect-[16/10] sm:min-h-[24rem] lg:min-h-[36rem]"
@@ -26,9 +26,11 @@ export function PostHeroImage({ image }: PostHeroImageProps) {
         />
       </div>
       {caption ? (
-        <figcaption className="mt-4 text-[0.6875rem] leading-5 text-stone-400">{caption}</figcaption>
+        <figcaption className="mt-4 text-[0.6875rem] leading-5 text-muted-foreground">
+          {caption}
+        </figcaption>
       ) : image.caption ? (
-        <figcaption className="mt-4 text-[0.6875rem] leading-5 text-stone-400">
+        <figcaption className="mt-4 text-[0.6875rem] leading-5 text-muted-foreground">
           <RichText data={image.caption} enableGutter={false} enableProse={false} />
         </figcaption>
       ) : null}

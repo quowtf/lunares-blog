@@ -1,6 +1,6 @@
 'use client'
 
-import { Lock } from 'lucide-react'
+import { Lock, X } from 'lucide-react'
 import { useEffect, useId, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -145,39 +145,50 @@ export function CommentPanel({ postId }: CommentPanelProps) {
     <div
       aria-labelledby={panelId}
       className={cn(
-        'comment-panel mt-3 overflow-hidden rounded-card border border-[#F5F4F2] bg-white p-4 shadow-sm',
+        'comment-panel mt-3 overflow-hidden rounded-card border border-border bg-card p-4 shadow-sm',
         isExiting ? 'comment-panel-exit' : 'comment-panel-enter',
       )}
       role="region"
     >
       {view === 'success' ? (
-        <p className="text-sm leading-6 text-stone-600" id={panelId}>
+        <p className="text-sm leading-6 text-muted-foreground" id={panelId}>
           {COMMENT_SUCCESS_MESSAGE}
         </p>
       ) : (
         <>
-          <p
-            className="mb-3 text-[0.65rem] font-medium uppercase tracking-[0.18em] text-stone-500"
-            id={panelId}
-          >
-            {view === 'login' && 'Inicia sesión para comentar'}
-            {view === 'signup' && 'Crea tu cuenta'}
-            {view === 'comment' && 'Tu comentario'}
-            {view === null && 'Cargando'}
-          </p>
+          <div className="mb-3 flex items-center justify-between">
+            <p
+              className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-muted-foreground"
+              id={panelId}
+            >
+              {view === 'login' && 'Inicia sesión para comentar'}
+              {view === 'signup' && 'Crea tu cuenta'}
+              {view === 'comment' && 'Tu comentario'}
+              {view === null && 'Cargando'}
+            </p>
+
+            <button
+              aria-label="Cerrar"
+              className="rounded-sm text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={closeComments}
+              type="button"
+            >
+              <X className="h-4 w-4 shrink-0" />
+            </button>
+          </div>
 
           {hasError ? (
-            <p className="mb-3 text-sm text-stone-500">{COMMENT_ERROR_MESSAGE}</p>
+            <p className="mb-3 text-sm text-muted-foreground">{COMMENT_ERROR_MESSAGE}</p>
           ) : null}
 
           {view === null ? (
-            <p className="text-sm text-stone-500">Verificando sesión…</p>
+            <p className="text-sm text-muted-foreground">Verificando sesión…</p>
           ) : null}
 
           {view === 'login' ? (
             <form className="space-y-3" onSubmit={handleLogin}>
               <div className="space-y-1.5">
-                <Label className="text-xs text-stone-600" htmlFor={`${panelId}-login-email`}>
+                <Label className="text-xs text-muted-foreground" htmlFor={`${panelId}-login-email`}>
                   Correo
                 </Label>
                 <Input
@@ -191,7 +202,10 @@ export function CommentPanel({ postId }: CommentPanelProps) {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs text-stone-600" htmlFor={`${panelId}-login-password`}>
+                <Label
+                  className="text-xs text-muted-foreground"
+                  htmlFor={`${panelId}-login-password`}
+                >
                   Contraseña
                 </Label>
                 <Input
@@ -205,10 +219,10 @@ export function CommentPanel({ postId }: CommentPanelProps) {
               </div>
 
               <div className="flex items-center justify-between gap-3 pt-1">
-                <p className="text-xs text-stone-500">
+                <p className="text-xs text-muted-foreground">
                   ¿No tienes cuenta?{' '}
                   <button
-                    className="text-stone-800 underline-offset-4 transition hover:text-stone-500 hover:underline"
+                    className="text-foreground underline-offset-4 transition hover:text-muted-foreground hover:underline"
                     onClick={() => {
                       setHasError(false)
                       setView('signup')
@@ -229,7 +243,7 @@ export function CommentPanel({ postId }: CommentPanelProps) {
           {view === 'signup' ? (
             <form className="space-y-3" onSubmit={handleSignup}>
               <div className="space-y-1.5">
-                <Label className="text-xs text-stone-600" htmlFor={`${panelId}-signup-name`}>
+                <Label className="text-xs text-muted-foreground" htmlFor={`${panelId}-signup-name`}>
                   Nombre
                 </Label>
                 <Input
@@ -243,7 +257,10 @@ export function CommentPanel({ postId }: CommentPanelProps) {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs text-stone-600" htmlFor={`${panelId}-signup-email`}>
+                <Label
+                  className="text-xs text-muted-foreground"
+                  htmlFor={`${panelId}-signup-email`}
+                >
                   Correo
                 </Label>
                 <Input
@@ -257,7 +274,10 @@ export function CommentPanel({ postId }: CommentPanelProps) {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs text-stone-600" htmlFor={`${panelId}-signup-password`}>
+                <Label
+                  className="text-xs text-muted-foreground"
+                  htmlFor={`${panelId}-signup-password`}
+                >
                   Contraseña
                 </Label>
                 <Input
@@ -272,10 +292,10 @@ export function CommentPanel({ postId }: CommentPanelProps) {
               </div>
 
               <div className="flex items-center justify-between gap-3 pt-1">
-                <p className="text-xs text-stone-500">
+                <p className="text-xs text-muted-foreground">
                   ¿Ya tienes cuenta?{' '}
                   <button
-                    className="text-stone-800 underline-offset-4 transition hover:text-stone-500 hover:underline"
+                    className="text-foreground underline-offset-4 transition hover:text-muted-foreground hover:underline"
                     onClick={() => {
                       setHasError(false)
                       setView('login')

@@ -44,7 +44,7 @@ function PostBannerBlock({
   if (style === 'info') {
     return (
       <aside className={cn('post-personal-note', className)}>
-        <p className="mb-4 text-[0.65rem] font-medium uppercase tracking-[0.18em] text-stone-500">
+        <p className="mb-4 text-[0.65rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
           Personal note
         </p>
         <RichText
@@ -57,9 +57,7 @@ function PostBannerBlock({
     )
   }
 
-  return (
-    <BannerBlock blockType="banner" className={className} content={content} style={style} />
-  )
+  return <BannerBlock blockType="banner" className={className} content={content} style={style} />
 }
 
 const jsxConverters: JSXConvertersFunction<NodeTypes> = ({ defaultConverters }) => ({

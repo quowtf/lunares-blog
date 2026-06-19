@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-import { Cormorant_Garamond } from 'next/font/google'
+import { Cormorant_Garamond, Source_Serif_4 } from 'next/font/google'
 
 import { cn } from '@/utilities/ui'
 import { GeistMono } from 'geist/font/mono'
@@ -23,10 +23,23 @@ const displaySerif = Cormorant_Garamond({
   display: 'swap',
 })
 
+const proseSerif = Source_Serif_4({
+  subsets: ['latin'],
+  weight: ['300', '400', '600'],
+  style: ['normal', 'italic'],
+  variable: '--font-prose',
+  display: 'swap',
+})
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
-      className={cn(GeistSans.variable, GeistMono.variable, displaySerif.variable)}
+      className={cn(
+        GeistSans.variable,
+        GeistMono.variable,
+        displaySerif.variable,
+        proseSerif.variable,
+      )}
       lang="es"
       suppressHydrationWarning
     >

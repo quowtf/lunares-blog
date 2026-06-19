@@ -10,7 +10,7 @@ export function PostRelated({ posts }: PostRelatedProps) {
 
   return (
     <section className="mt-20 lg:mt-40">
-      <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-stone-400">
+      <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
         Elsewhere in the archive
       </p>
 

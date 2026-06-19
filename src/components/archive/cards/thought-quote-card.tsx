@@ -1,6 +1,10 @@
 import type { CardVariant } from '@/types/archive'
 
-import { getVariantByIndex } from '@/components/archive/ui/card/card-variants'
+import {
+  getVariantByIndex,
+  cardBase,
+  cardVariants,
+} from '@/components/archive/ui/card/card-variants'
 import { CommentPanel, CommentTrigger } from '@/components/comments'
 import { cn } from '@/utilities/ui'
 import { Meta } from '../ui/typography'
@@ -16,11 +20,7 @@ export type ThoughtQuoteCardProps = {
   variant?: CardVariant
 }
 
-const variantClasses = {
-  default: 'bg-white',
-  muted: 'bg-[#F0F0F0]',
-  sepia: 'bg-[#F6F2ED]',
-} as const
+const variantClasses = cardVariants
 
 function BookmarkIcon({ className }: { className?: string }) {
   return (
@@ -56,27 +56,24 @@ export function ThoughtQuoteCard({
 
   return (
     <div>
-      <article
-        className={cn(
-          'overflow-hidden rounded-card border border-[#F5F4F2]',
-          variantClasses[cardVariant],
-        )}
-      >
+      <article className={cn('overflow-hidden', cardBase, variantClasses[cardVariant])}>
         <div className="flex min-h-48 flex-col justify-between gap-8 p-5">
           <header className="flex items-start justify-between gap-6">
-            <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-stone-500">
+            <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
               {label}
             </p>
           </header>
 
           <div className="space-y-1">
             <div className="space-y-3">
-              <blockquote className="max-w-72 font-serif text-base leading-relaxed text-stone-900">
+              <blockquote className="max-w-72 font-serif text-base leading-relaxed text-foreground">
                 {title}
               </blockquote>
             </div>
 
-            {body ? <p className="max-w-72 text-sm leading-6 text-stone-500">{body}</p> : null}
+            {body ? (
+              <p className="max-w-72 text-sm leading-6 text-muted-foreground">{body}</p>
+            ) : null}
           </div>
 
           <footer className="flex items-center justify-between">

@@ -19,7 +19,11 @@ import {
   type GalleryPostData,
   type ImagePostData,
 } from '@/utilities/archive'
-import { getVariantByIndex } from '@/components/archive/ui/card/card-variants'
+import {
+  getVariantByIndex,
+  cardBase,
+  cardVariants,
+} from '@/components/archive/ui/card/card-variants'
 import { cn } from '@/utilities/ui'
 
 export type ArchivePostData = Pick<Post, keyof typeof archivePostSelect>
@@ -47,32 +51,20 @@ function getCategoryLabel(post: ArchivePostData): string {
   return 'Post'
 }
 
-function canRenderGallery(
-  post: ArchivePostData,
-): post is GalleryPostData & ArchivePostData {
+function canRenderGallery(post: ArchivePostData): post is GalleryPostData & ArchivePostData {
   return (
-    post.PostType === 'gallery' &&
-    post.id != null &&
-    Boolean(post.publishedAt ?? post.createdAt)
+    post.PostType === 'gallery' && post.id != null && Boolean(post.publishedAt ?? post.createdAt)
   )
 }
 
 function canRenderSlides(post: ArchivePostData): post is GalleryPostData & ArchivePostData {
   return (
-    post.PostType === 'slides' &&
-    post.id != null &&
-    Boolean(post.publishedAt ?? post.createdAt)
+    post.PostType === 'slides' && post.id != null && Boolean(post.publishedAt ?? post.createdAt)
   )
 }
 
-function canRenderImageCard(
-  post: ArchivePostData,
-): post is ImagePostData & ArchivePostData {
-  return (
-    post.PostType === 'image' &&
-    post.id != null &&
-    Boolean(post.publishedAt ?? post.createdAt)
-  )
+function canRenderImageCard(post: ArchivePostData): post is ImagePostData & ArchivePostData {
+  return post.PostType === 'image' && post.id != null && Boolean(post.publishedAt ?? post.createdAt)
 }
 
 function canRenderThoughtQuote(post: ArchivePostData): boolean {
@@ -123,11 +115,7 @@ function ArrowRightIcon({ className }: { className?: string }) {
   )
 }
 
-function DefaultPostCard({
-  post,
-  index = 0,
-  priority = false,
-}: ArchivePostCardProps) {
+function DefaultPostCard({ post, index = 0, priority = false }: ArchivePostCardProps) {
   const isPost = isPostType(post)
   const href = getPostHref(post.slug)
   const image = post.heroImage ?? post.meta?.image
@@ -136,12 +124,6 @@ function DefaultPostCard({
   const excerpt = getPostExcerpt(post)
   const readingTime = getReadingTimeLabel(excerpt)
   const variant = getVariantByIndex(index)
-
-  const variantClasses = {
-    default: 'bg-white',
-    muted: 'bg-[#F0F0F0]',
-    sepia: 'bg-[#F6F2ED]',
-  } as const
 
   const heroImage =
     image && typeof image === 'object' ? (
@@ -158,12 +140,7 @@ function DefaultPostCard({
     ) : null
 
   return (
-    <article
-      className={cn(
-        'overflow-hidden rounded-card border border-[#F5F4F2]',
-        variantClasses[variant],
-      )}
-    >
+    <article className={cn('overflow-hidden', cardBase, cardVariants[variant])}>
       {heroImage ? (
         isPost ? (
           <Link aria-label={post.title} className="block" href={href}>
@@ -176,26 +153,29 @@ function DefaultPostCard({
 
       <div className="flex min-h-72 flex-col justify-between gap-8 p-5">
         <header className="flex items-start justify-between gap-6">
-          <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-stone-500">
+          <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
             {label}
           </p>
           <BookmarkIcon
-            className={cn('h-4 w-4 shrink-0', priority ? 'text-stone-900' : 'text-stone-400')}
+            className={cn(
+              'h-4 w-4 shrink-0',
+              priority ? 'text-foreground' : 'text-muted-foreground',
+            )}
           />
         </header>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <h2 className="max-w-72 font-serif text-2xl leading-[1.05] tracking-tight text-stone-950">
+            <h2 className="max-w-72 font-serif text-2xl leading-[1.05] tracking-tight text-foreground">
               {isPost ? (
-                <Link className="transition hover:text-stone-500" href={href}>
+                <Link className="transition hover:text-muted-foreground" href={href}>
                   {post.title}
                 </Link>
               ) : (
                 post.title
               )}
             </h2>
-            <p className="text-xs leading-5 text-stone-500">
+            <p className="text-xs leading-5 text-muted-foreground">
               {date}
               {readingTime ? (
                 <>
@@ -206,12 +186,14 @@ function DefaultPostCard({
             </p>
           </div>
 
-          {excerpt ? <p className="max-w-72 text-sm leading-6 text-stone-600">{excerpt}</p> : null}
+          {excerpt ? (
+            <p className="max-w-72 text-sm leading-6 text-muted-foreground">{excerpt}</p>
+          ) : null}
         </div>
 
         {isPost ? (
           <Link
-            className="inline-flex w-fit items-center gap-2 text-sm text-stone-800 transition hover:text-stone-500"
+            className="inline-flex w-fit items-center gap-2 text-sm text-foreground transition hover:text-muted-foreground"
             href={href}
           >
             Leer post

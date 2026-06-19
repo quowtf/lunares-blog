@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react'
 
 import { ArchiveSearch } from '@/components/archive/hero/archive-search'
 import { useTheme } from '@/providers/Theme'
-import type { Theme } from '@/providers/Theme/ThemeSelector/types'
 import { cn } from '@/utilities/ui'
 
 function BookmarkIcon({ className }: { className?: string }) {
@@ -36,61 +35,51 @@ function PostThemeToggle({ className }: { className?: string }) {
     setMounted(true)
   }, [])
 
-  const cycleTheme = () => {
-    const order: Array<Theme | null> = ['light', 'dark', null]
-    const current = theme ?? null
-    const index = order.indexOf(current)
-    const next = order[(index + 1) % order.length]
-    setTheme(next)
-  }
-
   if (!mounted) {
-    return <span className={cn('text-xs text-stone-400', className)}>Theme</span>
+    return <span className={cn('text-xs text-muted-foreground', className)}>Theme</span>
   }
 
-  const label = theme === 'dark' ? 'Dark' : theme === 'light' ? 'Light' : 'Auto'
+  const isDark = theme === 'dark'
 
   return (
     <button
-      className={cn(
-        'text-xs text-stone-500 transition hover:text-stone-800',
-        className,
-      )}
-      onClick={cycleTheme}
+      aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+      className={cn('text-xs text-muted-foreground transition hover:text-foreground', className)}
+      onClick={() => setTheme(isDark ? 'light' : 'dark')}
       type="button"
     >
-      {label}
+      {isDark ? 'Light' : 'Dark'}
     </button>
   )
 }
 
 export function PostHeader() {
   return (
-    <header className="fixed inset-x-0 top-0 z-50 h-14 border-b border-stone-200/60 bg-stone-50/90 backdrop-blur-md sm:h-[72px]">
+    <header className="fixed inset-x-0 top-0 z-50 h-14 border-b border-border bg-background/90 backdrop-blur-md sm:h-[72px]">
       <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:pl-[140px] lg:pr-10">
         <Link
-          className="font-display text-lg tracking-tight text-stone-900 transition hover:text-stone-600 sm:text-xl"
+          className="font-display text-lg tracking-tight text-foreground transition hover:text-muted-foreground sm:text-xl"
           href="/"
         >
-          Archive
+          Lunares
         </Link>
 
         <nav className="flex items-center gap-3 sm:gap-5 lg:gap-8">
-          <ArchiveSearch className="hidden w-40 sm:block lg:w-44 [&_input]:h-9 [&_input]:border-stone-200/80 [&_input]:bg-stone-50/50 [&_input]:text-xs" />
+          <ArchiveSearch className="hidden w-40 sm:block lg:w-44 [&_input]:h-9 [&_input]:text-xs" />
           <Link
-            className="text-xs text-stone-500 transition hover:text-stone-800 sm:hidden"
+            className="text-xs text-muted-foreground transition hover:text-foreground sm:hidden"
             href="/search"
           >
             Search
           </Link>
           <button
             aria-label="Bookmarks"
-            className="text-stone-400 transition hover:text-stone-700"
+            className="text-muted-foreground transition hover:text-foreground"
             type="button"
           >
             <BookmarkIcon className="h-4 w-4" />
           </button>
-          <span className="hidden text-xs text-stone-400 md:inline">Bookmarks</span>
+          <span className="hidden text-xs text-muted-foreground md:inline">Bookmarks</span>
           <PostThemeToggle />
         </nav>
       </div>

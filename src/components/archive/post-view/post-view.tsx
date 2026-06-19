@@ -45,11 +45,11 @@ export function PostView({ adjacent, post, related }: PostViewProps) {
       <PostHeader />
       <PostReadingProgress date={date} readingTime={readingTime} />
 
-      <article className="min-h-screen bg-stone-50 text-[#262626]">
+      <article className="min-h-screen bg-background text-foreground">
         <div className="mx-auto max-w-[1600px] px-4 pb-12 pt-24 sm:px-6 sm:pt-28 lg:pl-[140px] lg:pr-10 lg:pb-8 lg:pt-[120px]">
           <div className="w-full max-w-[720px]">
             <header className="space-y-6 sm:space-y-8 lg:space-y-10">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.6875rem] font-medium uppercase tracking-[0.1em] text-stone-500 sm:gap-x-4 sm:text-xs">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.6875rem] font-medium uppercase tracking-[0.1em] text-muted-foreground sm:gap-x-4 sm:text-xs">
                 <span>Post</span>
                 <span aria-hidden="true">&middot;</span>
                 <time dateTime={post.publishedAt ?? post.createdAt}>{date}</time>
@@ -61,12 +61,12 @@ export function PostView({ adjacent, post, related }: PostViewProps) {
                 ) : null}
               </div>
 
-              <h1 className="font-display max-w-[760px] text-[clamp(2.25rem,8vw,5.5rem)] font-light leading-[0.95] tracking-tight text-stone-950">
+              <h1 className="font-display max-w-[760px] text-[clamp(2.25rem,8vw,5.5rem)] font-light leading-[0.95] tracking-tight text-foreground">
                 {post.title}
               </h1>
 
               {description ? (
-                <p className="max-w-[600px] text-lg leading-relaxed text-stone-700 sm:text-xl lg:text-2xl lg:leading-snug">
+                <p className="max-w-[600px] text-lg leading-relaxed text-muted-foreground sm:text-xl lg:text-2xl lg:leading-snug">
                   {description}
                 </p>
               ) : null}
@@ -78,7 +78,9 @@ export function PostView({ adjacent, post, related }: PostViewProps) {
               </div>
             ) : null}
 
-            <div className={hasHeroImage ? 'mt-16 sm:mt-20 lg:mt-[120px]' : 'mt-10 sm:mt-16 lg:mt-20'}>
+            <div
+              className={hasHeroImage ? 'mt-16 sm:mt-20 lg:mt-[120px]' : 'mt-10 sm:mt-16 lg:mt-20'}
+            >
               <PostRichText data={post.content} />
             </div>
 

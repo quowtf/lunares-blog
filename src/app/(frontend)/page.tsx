@@ -15,7 +15,7 @@ export default async function HomePage() {
 
   return (
     <CommentLayout>
-      <main className="min-h-screen bg-stone-50 px-4 py-12 text-stone-950 sm:px-6 lg:px-10">
+      <main className="min-h-screen bg-background px-4 py-12 text-foreground sm:px-6 lg:px-10">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-10">
           <ArchiveHero />
 
@@ -60,14 +60,14 @@ async function queryPosts() {
 
 function EmptyState() {
   return (
-    <section className="rounded-[0.5rem] border border-dashed border-stone-300 bg-white/70 p-8">
-      <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-stone-500">
+    <section className="rounded-[0.5rem] border border-dashed border-border bg-card/70 p-8">
+      <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
         Sin entradas
       </p>
-      <h2 className="mt-3 font-serif text-3xl tracking-tight text-stone-950">
+      <h2 className="mt-3 font-serif text-3xl tracking-tight text-foreground">
         Todavia no hay publicaciones.
       </h2>
-      <p className="mt-3 max-w-xl text-sm leading-6 text-stone-600">
+      <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
         Vuelve pronto para descubrir nuevas historias y momentos.
       </p>
     </section>

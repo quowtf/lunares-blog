@@ -21,18 +21,18 @@ const aspectMap: Record<Exclude<ImagePanelVariant, 'natural'>, string> = {
 }
 
 const toneMap: Record<ImageTone, string> = {
-  paper: 'from-stone-200 via-stone-100 to-stone-300',
-  warm: 'from-amber-200 via-stone-100 to-stone-400',
-  cool: 'from-slate-300 via-stone-100 to-blue-200',
-  mist: 'from-zinc-200 via-white to-slate-300',
-  forest: 'from-stone-300 via-emerald-100 to-stone-500',
+  paper: 'from-muted via-card to-muted',
+  warm: 'from-amber-200/60 via-muted to-muted',
+  cool: 'from-slate-300/60 via-muted to-muted',
+  mist: 'from-muted via-card to-secondary',
+  forest: 'from-muted via-card to-secondary',
 }
 
 function ImagePlaceholder() {
   return (
     <>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.9),transparent_32%),radial-gradient(circle_at_72%_64%,rgba(68,64,60,0.2),transparent_30%)]" />
-      <div className="absolute inset-x-4 bottom-4 h-px bg-stone-900/10" />
+      <div className="absolute inset-0 bg-gradient-to-br from-muted/50 via-card to-muted" />
+      <div className="absolute inset-x-4 bottom-4 h-px bg-foreground/10" />
     </>
   )
 }
@@ -48,9 +48,7 @@ export function ImagePanel({
 
   if (isNatural) {
     return (
-      <div
-        className={cn('relative overflow-hidden bg-gradient-to-br', toneMap[tone], className)}
-      >
+      <div className={cn('relative overflow-hidden bg-gradient-to-br', toneMap[tone], className)}>
         {image.src ? (
           <Image
             alt={image.alt}

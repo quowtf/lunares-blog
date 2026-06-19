@@ -1,12 +1,12 @@
 import type { CardVariant } from '@/types/archive'
 
 export const cardVariants: Record<CardVariant, string> = {
-  default: 'bg-white',
-  muted: 'bg-[#F0F0F0]',
-  sepia: 'bg-[#F6F2ED]',
+  default: 'bg-card',
+  muted: 'bg-muted',
+  sepia: 'bg-secondary',
 }
 
-export const cardBase = 'rounded-card border border-[#F5F4F2]'
+export const cardBase = 'rounded-card border border-border'
 
 const rhythmSequence: CardVariant[] = ['default', 'sepia', 'muted', 'sepia', 'default', 'muted']
 
