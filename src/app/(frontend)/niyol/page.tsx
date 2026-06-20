@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
-import { getServerSideURL } from '@/utilities/getURL'
+import { getPayload } from 'payload'
+import config from '@payload-config'
 import { ArchiveHero } from '@/components/archive/hero'
 
 import { IntroPage } from './IntroPage'
@@ -9,6 +10,8 @@ import { StoryViewer } from './StoryViewer'
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
+
+export const dynamic = 'force-dynamic'
 
 export interface ViewerStory {
   id: number
@@ -21,11 +24,6 @@ interface StoryDoc {
   image?: { url?: string; [key: string]: unknown } | number | null
   author: number | { name: string; [key: string]: unknown }
   [key: string]: unknown
-}
-
-interface StoriesAPIResponse {
-  docs: StoryDoc[]
-  totalDocs: number
 }
 
 export function toViewerStories(docs: StoryDoc[]): ViewerStory[] {
@@ -52,15 +50,16 @@ export function toViewerStories(docs: StoryDoc[]): ViewerStory[] {
 
 async function fetchStories(): Promise<ViewerStory[]> {
   try {
-    const baseUrl = getServerSideURL()
-    const res = await fetch(`${baseUrl}/api/stories?depth=1`, { cache: 'no-store' })
+    const payload = await getPayload({ config })
 
-    if (!res.ok) {
-      return []
-    }
+    const data = await payload.find({
+      collection: 'stories' as 'posts', // cast: types may not be regenerated yet
+      depth: 1,
+      limit: 50,
+      overrideAccess: true,
+    })
 
-    const data: StoriesAPIResponse = await res.json()
-    return toViewerStories(data.docs)
+    return toViewerStories(data.docs as unknown as StoryDoc[])
   } catch {
     return []
   }
