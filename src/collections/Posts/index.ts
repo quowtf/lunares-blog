@@ -71,7 +71,14 @@ export const Posts: CollectionConfig<'posts'> = {
     {
       name: 'title',
       type: 'text',
-      required: true,
+      validate: (
+        value: string | null | undefined,
+        { siblingData }: { siblingData: Record<string, unknown> },
+      ) => {
+        if (siblingData?.PostType === 'image' || siblingData?.PostType === 'gallery') return true
+        if (!value) return 'El título es obligatorio'
+        return true
+      },
     },
     {
       type: 'tabs',
@@ -99,7 +106,15 @@ export const Posts: CollectionConfig<'posts'> = {
                 },
               }),
               label: false,
-              required: true,
+              validate: (
+                value: unknown,
+                { siblingData }: { siblingData: Record<string, unknown> },
+              ) => {
+                if (siblingData?.PostType === 'image' || siblingData?.PostType === 'gallery')
+                  return true
+                if (!value) return 'El contenido es obligatorio'
+                return true
+              },
             },
           ],
           label: 'Content',
@@ -229,8 +244,9 @@ export const Posts: CollectionConfig<'posts'> = {
       defaultValue: false,
       admin: {
         position: 'sidebar',
-        description: 'Crear Stories (12 hrs) a partir de las imágenes del gallery al publicar.',
-        condition: (_, siblingData) => siblingData?.PostType === 'gallery',
+        description: 'Crear Stories (12 hrs) a partir de las imágenes al publicar.',
+        condition: (_, siblingData) =>
+          siblingData?.PostType === 'gallery' || siblingData?.PostType === 'image',
       },
     },
     {
