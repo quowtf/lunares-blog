@@ -6,9 +6,11 @@ import {
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
 
-import { anyone } from '../access/anyone'
-import { authenticated } from '../access/authenticated'
-import { vercelPrivateBlobFileHandler } from '../utilities/vercelPrivateBlobFileHandler'
+import { anyone } from '@/access/anyone'
+import { authenticated } from '@/access/authenticated'
+import { vercelPrivateBlobFileHandler } from '@/utilities/vercelPrivateBlobFileHandler'
+
+import { stripMetadata } from './hooks/stripMetadata'
 
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -22,12 +24,17 @@ export const Media: CollectionConfig = {
     update: authenticated,
   },
 
+  hooks: {
+    beforeValidate: [stripMetadata],
+  },
+
   upload: {
     handlers: [vercelPrivateBlobFileHandler],
     adminThumbnail: 'thumbnail',
     focalPoint: true,
     imageSizes: [
       { name: 'thumbnail', width: 300 },
+      { name: 'gallery', width: 400, height: 400, crop: 'center' },
       { name: 'square', width: 500, height: 500 },
       { name: 'small', width: 600 },
       { name: 'medium', width: 900 },
@@ -48,11 +55,7 @@ export const Media: CollectionConfig = {
       type: 'richText',
       editor: lexicalEditor({
         features: ({ rootFeatures }) => {
-          return [
-            ...rootFeatures,
-            FixedToolbarFeature(),
-            InlineToolbarFeature(),
-          ]
+          return [...rootFeatures, FixedToolbarFeature(), InlineToolbarFeature()]
         },
       }),
     },

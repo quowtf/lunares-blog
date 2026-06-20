@@ -14,6 +14,12 @@ export const redirects: NextConfig['redirects'] = async () => {
     source: '/:path((?!ie-incompatible.html$).*)', // all pages except the incompatibility page
   }
 
+  const menowRedirect = {
+    source: '/menow',
+    destination: '/niyol',
+    permanent: true,
+  }
+
   const postsRedirects = [
     {
       source: '/posts',
@@ -32,5 +38,5 @@ export const redirects: NextConfig['redirects'] = async () => {
     },
   ]
 
-  return [internetExplorerRedirect, ...postsRedirects]
+  return [internetExplorerRedirect, menowRedirect, ...postsRedirects]
 }

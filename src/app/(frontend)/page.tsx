@@ -26,9 +26,7 @@ export default async function HomePage() {
 
                 <Masonry>
                   {group.items.map(({ post, index }) => (
-                    <div className="mb-4 break-inside-avoid" key={post.id}>
-                      <ArchivePostCard post={post} index={index} priority={index < 2} />
-                    </div>
+                    <ArchivePostCard key={post.id} post={post} index={index} priority={index < 2} />
                   ))}
                 </Masonry>
               </section>

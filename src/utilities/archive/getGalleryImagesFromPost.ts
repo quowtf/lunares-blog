@@ -5,8 +5,11 @@ import { mediaToImageAsset } from './mediaToImageAsset'
 
 type GalleryImagePostData = Pick<Post, 'galleryImages' | 'heroImage' | 'meta'>
 
+/** Use the dedicated 400×400 'gallery' imageSize for triptych cards. */
+const GALLERY_ASSET_OPTIONS = { preferredSize: 'gallery' } as const
+
 function pushUniqueImage(images: ImageAsset[], media: Media | number | null | undefined) {
-  const asset = mediaToImageAsset(media)
+  const asset = mediaToImageAsset(media, GALLERY_ASSET_OPTIONS)
   if (!asset) return
 
   const exists = images.some((image) => image.src === asset.src)

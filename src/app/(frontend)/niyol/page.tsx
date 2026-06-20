@@ -1,0 +1,84 @@
+import type { Metadata } from 'next'
+
+import { getServerSideURL } from '@/utilities/getURL'
+import { ArchiveHero } from '@/components/archive/hero'
+
+import { IntroPage } from './IntroPage'
+import { StoryViewer } from './StoryViewer'
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
+
+export interface ViewerStory {
+  id: number
+  imageUrl: string
+  authorName: string
+}
+
+interface StoryDoc {
+  id: number
+  image?: { url?: string; [key: string]: unknown } | number | null
+  author: number | { name: string; [key: string]: unknown }
+  [key: string]: unknown
+}
+
+interface StoriesAPIResponse {
+  docs: StoryDoc[]
+  totalDocs: number
+}
+
+export function toViewerStories(docs: StoryDoc[]): ViewerStory[] {
+  return docs
+    .filter((doc): doc is typeof doc & { image: { url: string } } => {
+      const image = doc.image
+      return (
+        image !== null &&
+        image !== undefined &&
+        typeof image === 'object' &&
+        typeof image.url === 'string' &&
+        image.url.length > 0
+      )
+    })
+    .map((doc) => ({
+      id: doc.id,
+      imageUrl: doc.image.url,
+      authorName:
+        typeof doc.author === 'object' && doc.author !== null
+          ? (doc.author as { name: string }).name
+          : 'Lunares',
+    }))
+}
+
+async function fetchStories(): Promise<ViewerStory[]> {
+  try {
+    const baseUrl = getServerSideURL()
+    const res = await fetch(`${baseUrl}/api/stories?depth=1`, { cache: 'no-store' })
+
+    if (!res.ok) {
+      return []
+    }
+
+    const data: StoriesAPIResponse = await res.json()
+    return toViewerStories(data.docs)
+  } catch {
+    return []
+  }
+}
+
+export default async function NiyolPage() {
+  const stories = await fetchStories()
+
+  if (stories.length > 0) {
+    return <StoryViewer stories={stories} />
+  }
+
+  return (
+    <main className="min-h-screen bg-background px-4 py-12 text-foreground sm:px-6 lg:px-10">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10">
+        <ArchiveHero />
+        <IntroPage />
+      </div>
+    </main>
+  )
+}

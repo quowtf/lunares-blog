@@ -73,6 +73,7 @@ export interface Config {
     categories: Category;
     users: User;
     comments: Comment;
+    stories: Story;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -96,6 +97,7 @@ export interface Config {
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     comments: CommentsSelect<false> | CommentsSelect<true>;
+    stories: StoriesSelect<false> | StoriesSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -126,6 +128,7 @@ export interface Config {
   user: User;
   jobs: {
     tasks: {
+      'cleanup-expired-stories': TaskCleanupExpiredStories;
       schedulePublish: TaskSchedulePublish;
       inline: {
         input: unknown;
@@ -260,6 +263,10 @@ export interface Post {
    * Gallery: solo imágenes. Slides: imágenes con título y descripción. Hasta 3.
    */
   galleryImages?: (number | Media)[] | null;
+  /**
+   * Crear Stories (12 hrs) a partir de las imágenes del gallery al publicar.
+   */
+  postToStories?: boolean | null;
   publishedAt?: string | null;
   authors?: (number | User)[] | null;
   populatedAuthors?:
@@ -313,6 +320,14 @@ export interface Media {
   focalY?: number | null;
   sizes?: {
     thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    gallery?: {
       url?: string | null;
       width?: number | null;
       height?: number | null;
@@ -804,6 +819,20 @@ export interface Comment {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stories".
+ */
+export interface Story {
+  id: number;
+  image?: (number | null) | Media;
+  author: number | User;
+  visibility?: ('public' | 'private') | null;
+  duration?: ('12' | '24' | '32' | '48') | null;
+  expiresAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
 export interface Redirect {
@@ -945,7 +974,7 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'schedulePublish';
+        taskSlug: 'inline' | 'cleanup-expired-stories' | 'schedulePublish';
         taskID: string;
         input?:
           | {
@@ -978,7 +1007,7 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'schedulePublish') | null;
+  taskSlug?: ('inline' | 'cleanup-expired-stories' | 'schedulePublish') | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -1015,6 +1044,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'comments';
         value: number | Comment;
+      } | null)
+    | ({
+        relationTo: 'stories';
+        value: number | Story;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1232,6 +1265,7 @@ export interface PostsSelect<T extends boolean = true> {
       };
   PostType?: T;
   galleryImages?: T;
+  postToStories?: T;
   publishedAt?: T;
   authors?: T;
   populatedAuthors?:
@@ -1269,6 +1303,16 @@ export interface MediaSelect<T extends boolean = true> {
     | T
     | {
         thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        gallery?:
           | T
           | {
               url?: T;
@@ -1393,6 +1437,19 @@ export interface CommentsSelect<T extends boolean = true> {
   text?: T;
   user?: T;
   post?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stories_select".
+ */
+export interface StoriesSelect<T extends boolean = true> {
+  image?: T;
+  author?: T;
+  visibility?: T;
+  duration?: T;
+  expiresAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1784,6 +1841,14 @@ export interface CollectionsWidget {
     [k: string]: unknown;
   };
   width: 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskCleanup-expired-stories".
+ */
+export interface TaskCleanupExpiredStories {
+  input?: unknown;
+  output?: unknown;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

@@ -15,6 +15,8 @@ import { Banner } from '../../blocks/Banner/config'
 import { Code } from '../../blocks/Code/config'
 import { MediaBlock } from '../../blocks/MediaBlock/config'
 import { generatePreviewPath } from '../../utilities/generatePreviewPath'
+import { createStoriesFromGallery } from './hooks/createStoriesFromGallery'
+import { deleteRelatedComments } from './hooks/deleteRelatedComments'
 import { populateAuthors } from './hooks/populateAuthors'
 import { revalidateDelete, revalidatePost } from './hooks/revalidatePost'
 
@@ -222,6 +224,16 @@ export const Posts: CollectionConfig<'posts'> = {
       },
     },
     {
+      name: 'postToStories',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+        description: 'Crear Stories (12 hrs) a partir de las imágenes del gallery al publicar.',
+        condition: (_, siblingData) => siblingData?.PostType === 'gallery',
+      },
+    },
+    {
       name: 'publishedAt',
       type: 'date',
       admin: {
@@ -277,8 +289,9 @@ export const Posts: CollectionConfig<'posts'> = {
     slugField(),
   ],
   hooks: {
-    afterChange: [revalidatePost],
+    afterChange: [revalidatePost, createStoriesFromGallery],
     afterRead: [populateAuthors],
+    beforeDelete: [deleteRelatedComments],
     afterDelete: [revalidateDelete],
   },
   versions: {
