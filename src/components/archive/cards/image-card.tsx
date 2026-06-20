@@ -1,13 +1,6 @@
 import type { ImageItem } from '@/types/archive'
 
-import {
-  Card,
-  CardSubtitle,
-  CardTitle,
-  Eyebrow,
-  ImagePanel,
-  Meta,
-} from '@/components/archive/ui'
+import { Card, CardSubtitle, CardTitle, Eyebrow, ImagePanel, Meta } from '@/components/archive/ui'
 import { CommentPanel, CommentTrigger } from '@/components/comments'
 
 type ImageCardProps = {
@@ -24,10 +17,10 @@ export function ImageCard({ item, priority = false }: ImageCardProps) {
         <div className="space-y-2 p-4">
           {item.label ? <Eyebrow>{item.label}</Eyebrow> : null}
 
-          {(item.title || item.subtitle) && (
+          {(item.title || item.content) && (
             <div className="space-y-0.5">
               {item.title ? <CardTitle>{item.title}</CardTitle> : null}
-              {item.subtitle ? <CardSubtitle>{item.subtitle}</CardSubtitle> : null}
+              {item.content ? <CardSubtitle>{item.content}</CardSubtitle> : null}
             </div>
           )}
 

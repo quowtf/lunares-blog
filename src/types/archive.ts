@@ -23,7 +23,7 @@ export type ImageItem = BaseArchiveItem & {
   type: 'image'
   label?: string
   title?: string
-  subtitle?: string
+  content?: string
   image: ImageAsset
 }
 
@@ -47,7 +47,6 @@ export type ArchiveItemType = ImageItem['type'] | GalleryItem['type'] | SlidesIt
 export function isImageItem(item: { type: string }): item is ImageItem {
   return item.type === 'image'
 }
-
 
 ////
 // import type { ReactNode } from "react";

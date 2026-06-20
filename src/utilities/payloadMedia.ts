@@ -1,14 +1,6 @@
 import type { Media } from '@/payload-types'
 
-const SIZE_PRIORITY = [
-  'large',
-  'medium',
-  'small',
-  'xlarge',
-  'square',
-  'thumbnail',
-  'og',
-] as const
+const SIZE_PRIORITY = ['medium', 'thumbnail'] as const
 
 const NON_OPTIMIZABLE_MIME_TYPES = new Set([
   'image/heic',
@@ -24,10 +16,7 @@ function hasNonOptimizableExtension(url: string): boolean {
   return NON_OPTIMIZABLE_EXTENSIONS.some((ext) => lower.endsWith(ext))
 }
 
-export function isNonOptimizableImage(
-  url: string,
-  mimeType?: string | null,
-): boolean {
+export function isNonOptimizableImage(url: string, mimeType?: string | null): boolean {
   if (mimeType && NON_OPTIMIZABLE_MIME_TYPES.has(mimeType.toLowerCase())) {
     return true
   }
@@ -63,10 +52,7 @@ export function getPreferredMediaFile(
  * next/image cannot reliably optimize Payload API routes with cache-busting query
  * strings, or formats like HEIC. Serve those directly instead.
  */
-export function shouldUseUnoptimizedImage(
-  src: string,
-  mimeType?: string | null,
-): boolean {
+export function shouldUseUnoptimizedImage(src: string, mimeType?: string | null): boolean {
   if (!src) return false
 
   if (isNonOptimizableImage(src, mimeType)) return true
