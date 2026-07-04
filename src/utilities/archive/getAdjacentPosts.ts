@@ -40,7 +40,7 @@ export async function getAdjacentPosts(currentSlug: string): Promise<{
   const next = index > 0 ? posts[index - 1] : null
 
   return {
-    prev: prev ? { slug: prev.slug, title: prev.title } : null,
-    next: next ? { slug: next.slug, title: next.title } : null,
+    prev: prev ? { slug: prev.slug, title: prev.title || '' } : null,
+    next: next ? { slug: next.slug, title: next.title || '' } : null,
   }
 }

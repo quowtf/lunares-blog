@@ -51,7 +51,7 @@ export function mapPostToImageItem(
     date: formatArchiveDate(post.publishedAt ?? post.createdAt),
     variant: getVariantByIndex(options.index ?? 0, options.variant),
     label: getPostLabel(post),
-    title: post.title,
+    title: post.title || undefined,
     content: getPostExcerpt(post) || undefined,
     image,
   }

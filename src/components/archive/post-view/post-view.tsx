@@ -81,7 +81,7 @@ export function PostView({ adjacent, post, related }: PostViewProps) {
             <div
               className={hasHeroImage ? 'mt-16 sm:mt-20 lg:mt-[120px]' : 'mt-10 sm:mt-16 lg:mt-20'}
             >
-              <PostRichText data={post.content} />
+              <PostRichText data={post.content!} />
             </div>
 
             <PostMetadata post={post} />

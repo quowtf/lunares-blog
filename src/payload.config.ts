@@ -30,6 +30,24 @@ export default buildConfig({
       // The `BeforeDashboard` component renders the 'welcome' block that you see after logging into your admin panel.
       // Feel free to delete this at any time. Simply remove the line below.
       beforeDashboard: ['@/components/BeforeDashboard'],
+      views: {
+        newPost: {
+          Component: '@/views/DistractionFreeEditor/index#DistractionFreeView',
+          path: '/new/post',
+          exact: true,
+          meta: {
+            title: 'Nuevo Post',
+          },
+        },
+        editPost: {
+          Component: '@/views/DistractionFreeEditor/index#DistractionFreeView',
+          path: '/new/post/:id',
+          exact: true,
+          meta: {
+            title: 'Editar Post',
+          },
+        },
+      },
     },
     importMap: {
       baseDir: path.resolve(dirname),

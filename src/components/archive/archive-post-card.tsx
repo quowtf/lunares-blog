@@ -143,7 +143,7 @@ function DefaultPostCard({ post, index = 0, priority = false }: ArchivePostCardP
     <article className={cn('overflow-hidden', cardBase, cardVariants[variant])}>
       {heroImage ? (
         isPost ? (
-          <Link aria-label={post.title} className="block" href={href}>
+          <Link aria-label={post.title || undefined} className="block" href={href}>
             {heroImage}
           </Link>
         ) : (

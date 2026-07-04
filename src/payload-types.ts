@@ -231,9 +231,9 @@ export interface Page {
  */
 export interface Post {
   id: number;
-  title: string;
+  title?: string | null;
   heroImage?: (number | null) | Media;
-  content: {
+  content?: {
     root: {
       type: string;
       children: {
@@ -247,7 +247,7 @@ export interface Post {
       version: number;
     };
     [k: string]: unknown;
-  };
+  } | null;
   relatedPosts?: (number | Post)[] | null;
   categories?: (number | Category)[] | null;
   meta?: {
@@ -264,7 +264,7 @@ export interface Post {
    */
   galleryImages?: (number | Media)[] | null;
   /**
-   * Crear Stories (12 hrs) a partir de las imágenes del gallery al publicar.
+   * Crear Stories (12 hrs) a partir de las imágenes al publicar.
    */
   postToStories?: boolean | null;
   publishedAt?: string | null;

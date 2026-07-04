@@ -64,7 +64,7 @@ export function mapPostToSlidesItem(
     date: formatArchiveDate(post.publishedAt ?? post.createdAt),
     variant: getVariantByIndex(options.index ?? 0, options.variant),
     label: getSlidesLabel(post),
-    title: post.title,
+    title: post.title || '',
     content: content || undefined,
     images,
   }
