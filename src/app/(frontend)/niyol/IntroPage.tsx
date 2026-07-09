@@ -6,11 +6,11 @@ export function IntroPage() {
           id="about-heading"
           className="font-display text-2xl font-light tracking-tight text-foreground sm:text-3xl"
         >
-          Sobre este espacio
+          Sobre Lunares.mx
         </h2>
         <div className="flex flex-col gap-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
           <p>Es el librero de trofeos en la sala o la vitrina de recuerdos en el comedor.</p>
-          <p>Es ese sentido de presencia digital, pertenencia simbólica, un espacio con espacio.</p>
+          <p>Es ese sentido de presencia digital, pertenencia simbólica y un espacio con espacio.</p>
           <p>Sobre todo, es un acto de rebeldía hacia el algoritmo, que a la fecha me incomoda.</p>
         </div>
       </section>
@@ -23,11 +23,11 @@ export function IntroPage() {
           Qué encontrarás aquí
         </h2>
         <div className="flex flex-col gap-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
-          <p>Un humano, una persona, un devoto, un creyente, un buscador de palabras.</p>
+          <p>Exactamente en esta página, deberías ver fotos que expiran en determinado momento.</p>
           <p>
-            Busco palabras en libros, para usarlas en contextos indebidos y de formas incorrectas.
+            Si estás viendo esta página entonces vuelve en otro momento y tal vez tengas suerte.
           </p>
-          <p>Espero no intimidarte, tanto, y que sepas que puedes volver aquí cuando gustes.</p>
+          <p>Niyōl, palabra náhuatl: "Yo en el presente" o "Mi vivir en este momento".</p>
         </div>
       </section>
     </div>
