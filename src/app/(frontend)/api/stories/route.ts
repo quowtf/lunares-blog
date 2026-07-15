@@ -26,7 +26,7 @@ export async function POST(req: Request): Promise<Response> {
     const formData = await req.formData()
 
     const caption = formData.get('caption') as string | null
-    const imageFile = formData.get('image') as File | null
+    let imageFile = formData.get('image') as File | null
 
     if (!imageFile) {
       return new Response('Image is required', { status: 400 })
@@ -34,7 +34,36 @@ export async function POST(req: Request): Promise<Response> {
 
     // Convert File to Buffer
     const arrayBuffer = await imageFile.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
+    let buffer = Buffer.from(arrayBuffer)
+
+    // Infer mimetype from extension if missing or invalid
+    const ext = imageFile.name.toLowerCase().split('.').pop() || ''
+    const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    let mimetype = imageFile.type
+
+    if (!mimetype || !validImageTypes.includes(mimetype)) {
+      const extToMime: Record<string, string> = {
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
+        png: 'image/png',
+        gif: 'image/gif',
+        webp: 'image/webp',
+        heic: 'image/jpeg',
+        heif: 'image/jpeg',
+      }
+      mimetype = extToMime[ext] || 'image/jpeg'
+    }
+
+    // Convert HEIC/HEIF to JPEG using sharp
+    if (['heic', 'heif'].includes(ext)) {
+      const sharp = (await import('sharp')).default
+      buffer = await sharp(buffer).jpeg({ quality: 85 }).toBuffer()
+      mimetype = 'image/jpeg'
+      // Update filename to .jpg
+      imageFile = new File([buffer], imageFile.name.replace(/\.heic$/i, '.jpg').replace(/\.heif$/i, '.jpg'), {
+        type: 'image/jpeg',
+      })
+    }
 
     // Upload image to media collection
     const mediaDoc = await payload.create({
@@ -46,7 +75,7 @@ export async function POST(req: Request): Promise<Response> {
       file: {
         name: imageFile.name,
         data: buffer,
-        mimetype: imageFile.type,
+        mimetype: mimetype,
         size: buffer.length,
       },
     })
@@ -89,7 +118,13 @@ export async function POST(req: Request): Promise<Response> {
       },
     })
   } catch (error) {
-    console.error({ err: error, message: 'Error creating story' })
-    return new Response('Error creating story', { status: 500 })
+    const err = error as Error
+    console.error({
+      err,
+      message: 'Error creating story',
+      stack: err.stack,
+      cause: err.cause,
+    })
+    return new Response(`Error creating story: ${err.message}`, { status: 500 })
   }
 }
