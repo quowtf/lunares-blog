@@ -8,6 +8,7 @@ export interface ViewerStory {
   id: number
   imageUrl: string
   authorName: string
+  caption?: string
 }
 
 interface StoryViewerProps {
@@ -241,9 +242,14 @@ export function StoryViewer({ stories }: StoryViewerProps) {
 
       {/* Author overlay */}
       {currentStory && (
-        <span className="absolute bottom-6 left-4 text-xs text-white/70 z-10">
-          {currentStory.authorName}
-        </span>
+        <div className="absolute bottom-6 left-4 right-4 z-10">
+          <span className="text-xs text-white/70">{currentStory.authorName}</span>
+          {currentStory.caption && (
+            <p className="mt-1 text-sm text-white font-medium drop-shadow-md">
+              {currentStory.caption}
+            </p>
+          )}
+        </div>
       )}
 
       {/* Tap zones — above image (z-10) but below header (z-20) */}

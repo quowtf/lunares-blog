@@ -776,6 +776,7 @@ export interface Comment {
 export interface Story {
   id: number;
   image?: (number | null) | Media;
+  caption?: string | null;
   author: number | User;
   visibility?: ('public' | 'private') | null;
   duration?: ('12' | '24' | '32' | '48') | null;
@@ -1338,6 +1339,7 @@ export interface CommentsSelect<T extends boolean = true> {
  */
 export interface StoriesSelect<T extends boolean = true> {
   image?: T;
+  caption?: T;
   author?: T;
   visibility?: T;
   duration?: T;

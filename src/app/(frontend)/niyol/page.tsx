@@ -17,12 +17,14 @@ export interface ViewerStory {
   id: number
   imageUrl: string
   authorName: string
+  caption?: string
 }
 
 interface StoryDoc {
   id: number
   image?: { url?: string; [key: string]: unknown } | number | null
   author: number | { name: string; [key: string]: unknown }
+  caption?: string | null
   [key: string]: unknown
 }
 
@@ -45,6 +47,7 @@ export function toViewerStories(docs: StoryDoc[]): ViewerStory[] {
         typeof doc.author === 'object' && doc.author !== null
           ? (doc.author as { name: string }).name
           : 'Lunares',
+      caption: doc.caption || undefined,
     }))
 }
 

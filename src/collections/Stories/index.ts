@@ -30,6 +30,12 @@ export const Stories: CollectionConfig = {
       required: false,
     },
     {
+      name: 'caption',
+      type: 'text',
+      required: false,
+      maxLength: 500,
+    },
+    {
       name: 'author',
       type: 'relationship',
       relationTo: 'users',
