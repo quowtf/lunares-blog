@@ -23,9 +23,9 @@ export function IntroPage() {
           Qué encontrarás aquí
         </h2>
         <div className="flex flex-col gap-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
-          <p>Exactamente en esta página, deberías ver fotos que expiran en determinado momento.</p>
+          <p>Exactamente en esta página, deberías ver fotos que expiran en 24hrs.</p>
           <p>
-            Si estás viendo esta página entonces vuelve en otro momento y tal vez tengas suerte.
+            Si estás viendo esta página entonces vuelve en otro día y tal vez tengas suerte.
           </p>
           <p>Niyōl, palabra náhuatl: "Yo en el presente" o "Mi vivir en este momento".</p>
         </div>

@@ -60,6 +60,11 @@ async function fetchStories(): Promise<ViewerStory[]> {
       depth: 1,
       limit: 50,
       overrideAccess: true,
+      where: {
+        expiresAt: {
+          greater_than: new Date().toISOString(),
+        },
+      },
     })
 
     return toViewerStories(data.docs as unknown as StoryDoc[])
