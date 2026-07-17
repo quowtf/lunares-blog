@@ -1,16 +1,12 @@
-import { BlobNotFoundError, del } from '@vercel/blob'
 import type { TaskHandler } from 'payload'
 
 /**
  * Cleanup job task handler that removes expired stories.
  *
- * For each expired story:
- * 1. Get the blob URL from the related media document
- * 2. Delete the blob via @vercel/blob `del()`
- * 3. If blob deletion succeeds or blob is already gone → delete the Payload document
- * 4. If blob deletion fails with another error → log and continue
- *
- * Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 7.1, 7.2, 7.3
+ * 1. Find all expired stories
+ * 2. Delete stories (bulk)
+ * 3. Delete related media (bulk) - blob is deleted automatically by vercelBlobStorage plugin
+ * 4. Send Telegram notification
  */
 export const cleanupExpiredStories: TaskHandler<{
   input: object
@@ -19,98 +15,105 @@ export const cleanupExpiredStories: TaskHandler<{
   const payload = req.payload
   const logger = payload.logger
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let expiredStories: any
-  try {
-    expiredStories = await payload.find({
-      collection: 'stories' as 'posts', // cast: types not yet regenerated for stories collection
-      where: {
-        expiresAt: {
-          less_than_equal: new Date().toISOString(),
-        },
+  // Find all expired stories with image relationship
+  const result = await payload.find({
+    collection: 'stories',
+    where: {
+      expiresAt: {
+        less_than_equal: new Date().toISOString(),
       },
-      sort: 'expiresAt',
-      limit: 0, // no limit — low volume expected (<30)
-      depth: 1, // populate image relationship
-      overrideAccess: true,
-      context: { skipExpirationFilter: true },
-    })
-  } catch (err) {
-    // Req 6.7: If the initial query fails, log error and return without exception
-    logger.error({ err, msg: '[Cleanup] Failed to query expired stories' })
-    return { output: { success: false } }
-  }
+    },
+    sort: 'expiresAt',
+    limit: 0,
+    depth: 1,
+    overrideAccess: true,
+    context: { skipExpirationFilter: true },
+  })
 
-  const stories = expiredStories.docs as Array<{
-    id: number | string
-    image?: { url?: string } | number | string | null
-  }>
-
-  if (stories.length === 0) {
-    // Req 6.6: No expired stories — log info and return successfully
+  if (result.docs.length === 0) {
     logger.info('[Cleanup] No expired stories to process')
     return { output: { success: true } }
   }
 
-  let deleted = 0
-  let errors = 0
-  const processed = stories.length
+  // Extract IDs
+  const storyIds = result.docs.map(d => d.id)
+  const mediaIds = result.docs
+    .filter(d => d.image && typeof d.image === 'object' && 'id' in d.image)
+    .map(d => (d.image as { id: string | number }).id)
 
-  for (const story of stories) {
+  let errors: string[] = []
+
+  // Delete stories (bulk)
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (payload.delete as any)({
+      collection: 'stories',
+      ids: storyIds,
+      overrideAccess: true,
+    })
+  } catch (err) {
+    const msg = `Failed to delete stories: ${err}`
+    logger.error({ err, msg: '[Cleanup] ' + msg })
+    errors.push(msg)
+  }
+
+  // Delete media (bulk) - blob is deleted automatically by vercelBlobStorage plugin
+  if (mediaIds.length > 0) {
     try {
-      // Req 7.3: Derive blob URL from the media document's `url` field
-      const image = story.image
-      const blobUrl =
-        image && typeof image === 'object' && 'url' in image ? (image.url as string) : undefined
-
-      if (blobUrl) {
-        // Req 6.2 / 7.1: Delete blob FIRST, before the document
-        await del(blobUrl)
-      }
-
-      // Blob deleted (or no blob to delete) — now delete the document
-      await payload.delete({
-        collection: 'stories' as 'posts', // cast: types not yet regenerated
-        id: story.id,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (payload.delete as any)({
+        collection: 'media',
+        ids: mediaIds,
         overrideAccess: true,
       })
-
-      deleted++
     } catch (err) {
-      if (err instanceof BlobNotFoundError) {
-        // Req 7.2: Blob already gone — proceed to delete the document
-        try {
-          await payload.delete({
-            collection: 'stories' as 'posts', // cast: types not yet regenerated
-            id: story.id,
-            overrideAccess: true,
-          })
-          deleted++
-        } catch (deleteErr) {
-          logger.error({
-            err: deleteErr,
-            msg: `[Cleanup] Failed to delete story document ${story.id} after BlobNotFoundError`,
-          })
-          errors++
-        }
-      } else {
-        // Req 6.3: Other blob errors — preserve document, log, continue
-        logger.error({
-          err,
-          msg: `[Cleanup] Failed to process story ${story.id}`,
-        })
-        errors++
-      }
+      const msg = `Failed to delete media: ${err}`
+      logger.error({ err, msg: '[Cleanup] ' + msg })
+      errors.push(msg)
     }
   }
 
-  // Req 6.4: Log summary
+  // Log summary
   logger.info({
-    processed,
-    deleted,
-    errors,
+    deleted: storyIds.length,
+    errors: errors.length,
     msg: '[Cleanup] Completed cleanup of expired stories',
   })
 
+  // Send Telegram notification
+  await sendTelegramNotification(storyIds.length, errors)
+
   return { output: { success: true } }
+}
+
+async function sendTelegramNotification(deleted: number, errors: string[]) {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN
+  const chatId = process.env.TELEGRAM_CHAT_ID
+
+  if (!botToken || !chatId) {
+    return // Telegram not configured
+  }
+
+  let message = `*Cleanup Stories Finished:*\n- Deleted: ${deleted} Stories`
+
+  if (errors.length > 0) {
+    message += `\n- Errors:`
+    for (const error of errors) {
+      message += `\n  - ${error}`
+    }
+  }
+
+  try {
+    await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: message,
+        parse_mode: 'Markdown',
+      }),
+    })
+  } catch (err) {
+    console.error('[Cleanup] Failed to send Telegram notification:', err)
+  }
 }
