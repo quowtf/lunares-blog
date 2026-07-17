@@ -781,6 +781,13 @@ export interface Story {
   visibility?: ('public' | 'private') | null;
   duration?: ('12' | '24' | '32' | '48') | null;
   expiresAt?: string | null;
+  views?: number | null;
+  taps?: number | null;
+  /**
+   * Total milliseconds visible
+   */
+  visible?: number | null;
+  skips?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1344,6 +1351,10 @@ export interface StoriesSelect<T extends boolean = true> {
   visibility?: T;
   duration?: T;
   expiresAt?: T;
+  views?: T;
+  taps?: T;
+  visible?: T;
+  skips?: T;
   updatedAt?: T;
   createdAt?: T;
 }

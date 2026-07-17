@@ -80,13 +80,24 @@ export const cleanupExpiredStories: TaskHandler<{
     msg: '[Cleanup] Completed cleanup of expired stories',
   })
 
+  // Build telemetry report from docs before they were deleted
+  const telemetryLines = result.docs.map((doc) => {
+    const caption = doc.caption || ''
+    const visible = doc.visible || 0
+    const views = doc.views || 0
+    const taps = doc.taps || 0
+    const skips = doc.skips || 0
+    const seconds = (visible / 1000).toFixed(1)
+    return `  - ${doc.id} | ${caption} | ${seconds}s | ${views} views | ${taps} taps | ${skips} skips`
+  })
+
   // Send Telegram notification
-  await sendTelegramNotification(storyIds.length, errors)
+  await sendTelegramNotification(storyIds.length, errors, telemetryLines)
 
   return { output: { success: true } }
 }
 
-async function sendTelegramNotification(deleted: number, errors: string[]) {
+async function sendTelegramNotification(deleted: number, errors: string[], telemetry: string[]) {
   const botToken = process.env.TELEGRAM_BOT_TOKEN
   const chatId = process.env.TELEGRAM_CHAT_ID
 
@@ -95,6 +106,12 @@ async function sendTelegramNotification(deleted: number, errors: string[]) {
   }
 
   let message = `*Cleanup Stories Finished:*\n- Deleted: ${deleted} Stories`
+
+  if (telemetry.length > 0) {
+    message += `\n\n📊 *Telemetry:*\n`
+    message += `  ID | Caption | Visible | Views | Taps | Skips\n`
+    message += telemetry.join('\n')
+  }
 
   if (errors.length > 0) {
     message += `\n- Errors:`

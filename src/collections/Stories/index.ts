@@ -106,5 +106,39 @@ export const Stories: CollectionConfig = {
         readOnly: true,
       },
     },
+    // Telemetry fields
+    {
+      name: 'views',
+      type: 'number',
+      defaultValue: 0,
+      admin: {
+        readOnly: true,
+      },
+    },
+    {
+      name: 'taps',
+      type: 'number',
+      defaultValue: 0,
+      admin: {
+        readOnly: true,
+      },
+    },
+    {
+      name: 'visible',
+      type: 'number',
+      defaultValue: 0,
+      admin: {
+        readOnly: true,
+        description: 'Total milliseconds visible',
+      },
+    },
+    {
+      name: 'skips',
+      type: 'number',
+      defaultValue: 0,
+      admin: {
+        readOnly: true,
+      },
+    },
   ],
 }

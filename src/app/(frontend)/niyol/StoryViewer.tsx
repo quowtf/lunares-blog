@@ -15,14 +15,22 @@ interface StoryViewerProps {
   stories: ViewerStory[]
 }
 
+interface StoryMetrics {
+  views: number
+  taps: number
+  visible: number
+  skips: number
+}
+
 const TIMER_DURATION = 4000
+const VIEW_THRESHOLD = 2000
 
 export function StoryViewer({ stories }: StoryViewerProps) {
   const router = useRouter()
   const [currentIndex, setCurrentIndex] = useState<number>(0)
   const [isPaused, setIsPaused] = useState<boolean>(false)
 
-  // Crossfade state: track the previous index to show during transition
+  // Crossfade state
   const [previousIndex, setPreviousIndex] = useState<number | null>(null)
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false)
 
@@ -32,11 +40,113 @@ export function StoryViewer({ stories }: StoryViewerProps) {
   const startTimeRef = useRef<number>(Date.now())
   const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Telemetry refs
+  const metricsRef = useRef<Map<number, StoryMetrics>>(new Map())
+  const viewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const viewedSetRef = useRef<Set<number>>(new Set())
+  const storyVisibleStartRef = useRef<number>(Date.now())
+  const telemetrySentRef = useRef<boolean>(false)
+
+  // Initialize metrics for all stories
+  useEffect(() => {
+    for (const story of stories) {
+      if (!metricsRef.current.has(story.id)) {
+        metricsRef.current.set(story.id, { views: 0, taps: 0, visible: 0, skips: 0 })
+      }
+    }
+  }, [stories])
+
+  // Send telemetry batch
+  const sendTelemetry = useCallback(() => {
+    if (telemetrySentRef.current) return
+    // Flush current story visible time
+    const currentStory = stories[currentIndex]
+    if (currentStory) {
+      const metrics = metricsRef.current.get(currentStory.id)
+      if (metrics) {
+        metrics.visible += Date.now() - storyVisibleStartRef.current
+      }
+    }
+
+    const payload: { id: number; views: number; taps: number; visible: number; skips: number }[] =
+      []
+    for (const [id, m] of metricsRef.current) {
+      if (m.views > 0 || m.taps > 0 || m.visible > 0 || m.skips > 0) {
+        payload.push({ id, views: m.views, taps: m.taps, visible: m.visible, skips: m.skips })
+      }
+    }
+
+    if (payload.length === 0) return
+
+    const body = JSON.stringify({ metrics: payload })
+    const sent = navigator.sendBeacon('/api/stories/telemetry', new Blob([body], { type: 'application/json' }))
+
+    if (!sent) {
+      // Fallback: fire-and-forget fetch
+      fetch('/api/stories/telemetry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        keepalive: true,
+      }).catch(() => {})
+    }
+
+    telemetrySentRef.current = true
+  }, [stories, currentIndex])
+
+  // Track when a story becomes visible (start view timer + visible clock)
+  const startViewTracking = useCallback(
+    (index: number) => {
+      const story = stories[index]
+      if (!story) return
+
+      storyVisibleStartRef.current = Date.now()
+
+      // Start 2s view timer (only if not already viewed)
+      if (!viewedSetRef.current.has(story.id)) {
+        if (viewTimerRef.current) clearTimeout(viewTimerRef.current)
+        viewTimerRef.current = setTimeout(() => {
+          viewedSetRef.current.add(story.id)
+          const metrics = metricsRef.current.get(story.id)
+          if (metrics) metrics.views += 1
+        }, VIEW_THRESHOLD)
+      }
+    },
+    [stories],
+  )
+
+  // Stop tracking when leaving a story
+  const stopViewTracking = useCallback(
+    (index: number, wasSkip: boolean) => {
+      const story = stories[index]
+      if (!story) return
+
+      // Accumulate visible time
+      const metrics = metricsRef.current.get(story.id)
+      if (metrics) {
+        metrics.visible += Date.now() - storyVisibleStartRef.current
+      }
+
+      // Cancel view timer if still running
+      if (viewTimerRef.current) {
+        clearTimeout(viewTimerRef.current)
+        viewTimerRef.current = null
+      }
+
+      // Count skip if left before 2s and not already viewed
+      if (wasSkip && !viewedSetRef.current.has(story.id) && metrics) {
+        metrics.skips += 1
+      }
+    },
+    [stories],
+  )
+
   const handleClose = () => {
+    sendTelemetry()
     router.push('/')
   }
 
-  // Trigger crossfade transition when changing stories
+  // Trigger crossfade transition
   const changeStory = useCallback(
     (nextIndex: number) => {
       setPreviousIndex(currentIndex)
@@ -46,15 +156,13 @@ export function StoryViewer({ stories }: StoryViewerProps) {
     [currentIndex],
   )
 
-  // When isTransitioning becomes true, schedule the fade-in on next frame
+  // Crossfade effect
   useEffect(() => {
     if (isTransitioning) {
-      // Use rAF to ensure browser paints the opacity-0 frame first
       const frameId = requestAnimationFrame(() => {
         setIsTransitioning(false)
       })
 
-      // Clear previous layer after transition completes
       if (transitionTimeoutRef.current) {
         clearTimeout(transitionTimeoutRef.current)
       }
@@ -66,18 +174,24 @@ export function StoryViewer({ stories }: StoryViewerProps) {
     }
   }, [isTransitioning])
 
-  // Advance to next story or navigate home if on last
+  // Advance to next story or close
   const advanceStory = useCallback(() => {
+    const elapsed = Date.now() - storyVisibleStartRef.current
+    const wasSkip = elapsed < VIEW_THRESHOLD
+
+    stopViewTracking(currentIndex, wasSkip)
+
     if (currentIndex >= stories.length - 1) {
+      sendTelemetry()
       router.push('/')
     } else {
       setPreviousIndex(currentIndex)
       setIsTransitioning(true)
       setCurrentIndex(currentIndex + 1)
     }
-  }, [currentIndex, stories.length, router])
+  }, [currentIndex, stories.length, router, stopViewTracking, sendTelemetry])
 
-  // Start a timer for the remaining duration
+  // Start story auto-advance timer
   const startTimer = useCallback(
     (remaining: number) => {
       if (timerRef.current) {
@@ -92,55 +206,102 @@ export function StoryViewer({ stories }: StoryViewerProps) {
     [advanceStory],
   )
 
-  // Reset timer to full duration (used on story change and tap navigation)
   const resetTimer = useCallback(() => {
     elapsedRef.current = 0
     setIsPaused(false)
     startTimer(TIMER_DURATION)
   }, [startTimer])
 
-  // Tap handlers
+  // Tap right: advance (may be skip)
   const handleTapRight = useCallback(() => {
+    const elapsed = Date.now() - storyVisibleStartRef.current
+    const wasSkip = elapsed < VIEW_THRESHOLD
+
+    stopViewTracking(currentIndex, wasSkip)
+
     if (currentIndex >= stories.length - 1) {
+      sendTelemetry()
       router.push('/')
     } else {
       changeStory(currentIndex + 1)
       resetTimer()
     }
-  }, [currentIndex, stories.length, router, resetTimer, changeStory])
+  }, [currentIndex, stories.length, router, resetTimer, changeStory, stopViewTracking, sendTelemetry])
 
+  // Tap left: go back (counts as tap on target story)
   const handleTapLeft = useCallback(() => {
     if (currentIndex > 0) {
+      const elapsed = Date.now() - storyVisibleStartRef.current
+      const wasSkip = elapsed < VIEW_THRESHOLD
+      stopViewTracking(currentIndex, wasSkip)
+
+      const targetStory = stories[currentIndex - 1]
+      if (targetStory) {
+        const metrics = metricsRef.current.get(targetStory.id)
+        if (metrics) metrics.taps += 1
+      }
+
       changeStory(currentIndex - 1)
       resetTimer()
     }
-  }, [currentIndex, resetTimer, changeStory])
+  }, [currentIndex, stories, resetTimer, changeStory, stopViewTracking])
 
-  // Visibility change handler — pause/resume timer
+  // Visibility change: pause/resume + send telemetry on hidden
   const handleVisibilityChange = useCallback(() => {
     if (document.visibilityState === 'hidden') {
-      // Pause: store elapsed time and clear timeout
       if (timerRef.current) {
         clearTimeout(timerRef.current)
         timerRef.current = null
       }
       elapsedRef.current = Date.now() - startTimeRef.current + elapsedRef.current
       setIsPaused(true)
+
+      // Pause view timer
+      if (viewTimerRef.current) {
+        clearTimeout(viewTimerRef.current)
+        viewTimerRef.current = null
+      }
+
+      // Flush visible time for current story
+      const story = stories[currentIndex]
+      if (story) {
+        const metrics = metricsRef.current.get(story.id)
+        if (metrics) {
+          metrics.visible += Date.now() - storyVisibleStartRef.current
+        }
+      }
+
+      sendTelemetry()
     } else {
-      // Resume: restart timer with remaining time
+      // Resume
       const remaining = TIMER_DURATION - elapsedRef.current
       setIsPaused(false)
       startTimer(Math.max(remaining, 0))
-    }
-  }, [startTimer])
 
-  // Start timer on mount and reset on story change
+      // Reset telemetry sent flag so next hidden event can send again
+      telemetrySentRef.current = false
+
+      // Reset visible start and restart view timer
+      storyVisibleStartRef.current = Date.now()
+      const story = stories[currentIndex]
+      if (story && !viewedSetRef.current.has(story.id)) {
+        viewTimerRef.current = setTimeout(() => {
+          viewedSetRef.current.add(story.id)
+          const metrics = metricsRef.current.get(story.id)
+          if (metrics) metrics.views += 1
+        }, VIEW_THRESHOLD)
+      }
+    }
+  }, [startTimer, stories, currentIndex, sendTelemetry])
+
+  // Start view tracking on story change
   useEffect(() => {
+    startViewTracking(currentIndex)
     resetTimer()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex])
 
-  // Set up visibility change listener
+  // Visibility change listener
   useEffect(() => {
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => {
@@ -148,19 +309,16 @@ export function StoryViewer({ stories }: StoryViewerProps) {
     }
   }, [handleVisibilityChange])
 
-  // Cleanup timers on unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current)
-      }
-      if (transitionTimeoutRef.current) {
-        clearTimeout(transitionTimeoutRef.current)
-      }
+      if (timerRef.current) clearTimeout(timerRef.current)
+      if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current)
+      if (viewTimerRef.current) clearTimeout(viewTimerRef.current)
     }
   }, [])
 
-  // Image preloading on mount
+  // Image preloading
   useEffect(() => {
     stories.forEach((story) => {
       const img = new Image()
@@ -213,14 +371,12 @@ export function StoryViewer({ stories }: StoryViewerProps) {
                   }}
                 />
               )}
-              {/* Segments after currentIndex remain empty (no inner div) */}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Crossfade image layers — two stacked layers with bg-black always underneath */}
-      {/* Bottom layer: shows the previous image during transition, fades out */}
+      {/* Crossfade image layers */}
       {previousStory && isTransitioning && (
         <img
           src={previousStory.imageUrl}
@@ -229,7 +385,6 @@ export function StoryViewer({ stories }: StoryViewerProps) {
         />
       )}
 
-      {/* Top layer: current image, fades in during transition */}
       {currentStory && (
         <img
           key={currentStory.id}
@@ -252,7 +407,7 @@ export function StoryViewer({ stories }: StoryViewerProps) {
         </div>
       )}
 
-      {/* Tap zones — above image (z-10) but below header (z-20) */}
+      {/* Tap zones */}
       <div
         className="absolute inset-y-0 left-0 w-1/2 z-10"
         onClick={handleTapLeft}
