@@ -105,7 +105,7 @@ export async function POST(req: Request): Promise<Response> {
         caption: caption || '',
         author: authorId,
         visibility: 'public',
-        duration: '12',
+        duration: '24',
       } as unknown as Story,
     })
 

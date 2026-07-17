@@ -82,17 +82,17 @@ export const Stories: CollectionConfig = {
           value: '24',
         },
         {
-          label: '32 horas',
-          value: '32',
-        },
-        {
           label: '48 horas',
           value: '48',
+        },
+        {
+          label: '72 horas',
+          value: '72',
         },
       ],
       validate: (value: string | null | undefined) => {
         if (value === null || value === undefined || value === '') return true
-        const allowed = ['12', '24', '32', '48']
+        const allowed = ['12', '24', '72', '48']
         if (!allowed.includes(value)) {
           return `El campo duration solo permite los valores: ${allowed.join(', ')}`
         }
@@ -103,7 +103,7 @@ export const Stories: CollectionConfig = {
       name: 'expiresAt',
       type: 'date',
       admin: {
-        readOnly: true,
+        readOnly: false,
       },
     },
     // Telemetry fields

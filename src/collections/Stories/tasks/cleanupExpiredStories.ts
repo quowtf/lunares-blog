@@ -45,10 +45,11 @@ export const cleanupExpiredStories: TaskHandler<{
 
   // Delete stories (bulk)
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (payload.delete as any)({
+    await payload.delete({
       collection: 'stories',
-      ids: storyIds,
+      where: {
+        id: { in: storyIds },
+      },
       overrideAccess: true,
     })
   } catch (err) {
@@ -60,10 +61,11 @@ export const cleanupExpiredStories: TaskHandler<{
   // Delete media (bulk) - blob is deleted automatically by vercelBlobStorage plugin
   if (mediaIds.length > 0) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (payload.delete as any)({
+      await payload.delete({
         collection: 'media',
-        ids: mediaIds,
+        where: {
+          id: { in: mediaIds },
+        },
         overrideAccess: true,
       })
     } catch (err) {
