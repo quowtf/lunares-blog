@@ -27,7 +27,6 @@ export function IntroPage() {
           <p>
             Si estás viendo esta página entonces vuelve en otro día y tal vez tengas suerte.
           </p>
-          <p>Niyōl, palabra náhuatl: "Yo en el presente" o "Mi vivir en este momento".</p>
         </div>
       </section>
     </div>

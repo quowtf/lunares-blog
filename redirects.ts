@@ -16,7 +16,13 @@ export const redirects: NextConfig['redirects'] = async () => {
 
   const menowRedirect = {
     source: '/menow',
-    destination: '/niyol',
+    destination: '/momentos',
+    permanent: true,
+  }
+
+  const aboutRedirect = {
+    source: '/about',
+    destination: '/momentos',
     permanent: true,
   }
 
@@ -38,5 +44,5 @@ export const redirects: NextConfig['redirects'] = async () => {
     },
   ]
 
-  return [internetExplorerRedirect, menowRedirect, ...postsRedirects]
+  return [internetExplorerRedirect, menowRedirect, aboutRedirect, ...postsRedirects]
 }

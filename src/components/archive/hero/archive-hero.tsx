@@ -9,7 +9,7 @@ export function ArchiveHero() {
     <header className="grid gap-8 md:grid-cols-[1fr_auto] md:items-start">
       <div className="space-y-4">
         <h1 className="font-serif text-6xl leading-none tracking-[0.12em] text-foreground sm:text-7xl md:text-8xl">
-          <Link href="/niyol" className="hover:opacity-80 transition-opacity">
+          <Link href="/momentos" className="hover:opacity-80 transition-opacity">
             Lunares
           </Link>
         </h1>
