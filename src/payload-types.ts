@@ -519,6 +519,7 @@ export interface ContentBlock {
  */
 export interface MediaBlock {
   media: number | Media;
+  size?: ('full' | 'wide' | 'medium' | 'small') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'mediaBlock';
@@ -1195,6 +1196,7 @@ export interface ContentBlockSelect<T extends boolean = true> {
  */
 export interface MediaBlockSelect<T extends boolean = true> {
   media?: T;
+  size?: T;
   id?: T;
   blockName?: T;
 }

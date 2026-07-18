@@ -10,5 +10,24 @@ export const MediaBlock: Block = {
       relationTo: 'media',
       required: true,
     },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'size',
+          type: 'select',
+          defaultValue: 'full',
+          options: [
+            { label: 'Full', value: 'full' },
+            { label: 'Wide (breakout)', value: 'wide' },
+            { label: 'Medium (75%)', value: 'medium' },
+            { label: 'Small (50%)', value: 'small' },
+          ],
+          admin: {
+            width: '50%',
+          },
+        },
+      ],
+    },
   ],
 }
