@@ -13,11 +13,17 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
+export interface ViewerStoryLink {
+  url: string
+  newTab: boolean
+}
+
 export interface ViewerStory {
   id: number
   imageUrl: string
   authorName: string
   caption?: string
+  link?: ViewerStoryLink
 }
 
 interface StoryDoc {
@@ -25,6 +31,12 @@ interface StoryDoc {
   image?: { url?: string; [key: string]: unknown } | number | null
   author: number | { name: string; [key: string]: unknown }
   caption?: string | null
+  link?: {
+    type?: 'reference' | 'custom' | null
+    newTab?: boolean | null
+    reference?: { relationTo: string; value: { slug?: string } | number } | null
+    url?: string | null
+  } | null
   [key: string]: unknown
 }
 
@@ -40,15 +52,35 @@ export function toViewerStories(docs: StoryDoc[]): ViewerStory[] {
         image.url.length > 0
       )
     })
-    .map((doc) => ({
-      id: doc.id,
-      imageUrl: doc.image.url,
-      authorName:
-        typeof doc.author === 'object' && doc.author !== null
-          ? (doc.author as { name: string }).name
-          : 'Lunares',
-      caption: doc.caption || undefined,
-    }))
+    .map((doc) => {
+      let link: ViewerStoryLink | undefined
+
+      if (doc.link) {
+        const newTab = doc.link.newTab ?? false
+
+        if (doc.link.type === 'reference' && doc.link.reference) {
+          const ref = doc.link.reference
+          const value = ref.value
+          if (typeof value === 'object' && value.slug) {
+            const prefix = ref.relationTo === 'posts' ? '/posts' : ''
+            link = { url: `${prefix}/${value.slug}`, newTab }
+          }
+        } else if (doc.link.type === 'custom' && doc.link.url) {
+          link = { url: doc.link.url, newTab }
+        }
+      }
+
+      return {
+        id: doc.id,
+        imageUrl: doc.image.url,
+        authorName:
+          typeof doc.author === 'object' && doc.author !== null
+            ? (doc.author as { name: string }).name
+            : 'Lunares',
+        caption: doc.caption || undefined,
+        link,
+      }
+    })
 }
 
 async function fetchStories(): Promise<ViewerStory[]> {

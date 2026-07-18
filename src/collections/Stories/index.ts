@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
+import { link } from '../../fields/link'
 import { isAdmin } from '../../access/isAdmin'
 import { storiesReadAccess } from './access/storiesReadAccess'
 import { computeExpiresAt } from './hooks/computeExpiresAt'
@@ -99,6 +100,16 @@ export const Stories: CollectionConfig = {
         return true
       },
     },
+    link({
+      disableLabel: true,
+      appearances: false,
+      overrides: {
+        name: 'link',
+        admin: {
+          description: 'Enlace opcional para mostrar en la story',
+        },
+      },
+    }),
     {
       name: 'expiresAt',
       type: 'date',

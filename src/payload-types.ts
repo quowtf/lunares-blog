@@ -779,7 +779,24 @@ export interface Story {
   caption?: string | null;
   author: number | User;
   visibility?: ('public' | 'private') | null;
-  duration?: ('12' | '24' | '32' | '48') | null;
+  duration?: ('12' | '24' | '48' | '72') | null;
+  /**
+   * Enlace opcional para mostrar en la story
+   */
+  link?: {
+    type?: ('reference' | 'custom') | null;
+    newTab?: boolean | null;
+    reference?:
+      | ({
+          relationTo: 'pages';
+          value: number | Page;
+        } | null)
+      | ({
+          relationTo: 'posts';
+          value: number | Post;
+        } | null);
+    url?: string | null;
+  };
   expiresAt?: string | null;
   views?: number | null;
   taps?: number | null;
@@ -1350,6 +1367,14 @@ export interface StoriesSelect<T extends boolean = true> {
   author?: T;
   visibility?: T;
   duration?: T;
+  link?:
+    | T
+    | {
+        type?: T;
+        newTab?: T;
+        reference?: T;
+        url?: T;
+      };
   expiresAt?: T;
   views?: T;
   taps?: T;

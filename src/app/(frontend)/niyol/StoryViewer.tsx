@@ -1,14 +1,21 @@
 'use client'
 
-import { X } from 'lucide-react'
+import { ArrowRight, ExternalLink, X } from 'lucide-react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
+
+export interface ViewerStoryLink {
+  url: string
+  newTab: boolean
+}
 
 export interface ViewerStory {
   id: number
   imageUrl: string
   authorName: string
   caption?: string
+  link?: ViewerStoryLink
 }
 
 interface StoryViewerProps {
@@ -398,6 +405,31 @@ export function StoryViewer({ stories }: StoryViewerProps) {
       {/* Author overlay */}
       {currentStory && (
         <div className="absolute bottom-6 left-4 right-4 z-10">
+          {currentStory.link && (
+            <div className="mb-3">
+              {currentStory.link.newTab ? (
+                <a
+                  href={currentStory.link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/30"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ExternalLink size={14} />
+                  <span>Abrir enlace</span>
+                </a>
+              ) : (
+                <Link
+                  href={currentStory.link.url}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/30"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ArrowRight size={14} />
+                  <span>Ver en el blog</span>
+                </Link>
+              )}
+            </div>
+          )}
           <span className="text-xs text-white/70">{currentStory.authorName}</span>
           {currentStory.caption && (
             <p className="mt-1 text-sm text-white font-medium drop-shadow-md">
