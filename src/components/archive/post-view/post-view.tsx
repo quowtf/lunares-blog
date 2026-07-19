@@ -36,7 +36,6 @@ export function PostView({ adjacent, post, related }: PostViewProps) {
   const readingTime = getReadingTime(plainText) ?? '1 min'
   const date = formatPostMetaDate(post.publishedAt ?? post.createdAt)
   const categoryLabel = getPostCategoryLabel(post)
-  const description = post.meta?.description?.trim()
   const heroImage = post.heroImage
   const hasHeroImage = heroImage && typeof heroImage === 'object'
 
@@ -64,12 +63,6 @@ export function PostView({ adjacent, post, related }: PostViewProps) {
               <h1 className="font-display max-w-[760px] text-[clamp(2.25rem,8vw,5.5rem)] font-light leading-[0.95] tracking-tight text-foreground">
                 {post.title}
               </h1>
-
-              {description ? (
-                <p className="max-w-[600px] text-lg leading-relaxed text-muted-foreground sm:text-xl lg:text-2xl lg:leading-snug">
-                  {description}
-                </p>
-              ) : null}
             </header>
 
             {hasHeroImage ? (
