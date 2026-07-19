@@ -404,7 +404,7 @@ export function StoryViewer({ stories }: StoryViewerProps) {
 
       {/* Author overlay */}
       {currentStory && (
-        <div className="absolute bottom-6 left-4 right-4 z-10">
+        <div className="absolute bottom-6 left-4 right-4 z-20">
           {currentStory.link && (
             <div className="mb-3">
               {currentStory.link.newTab ? (
