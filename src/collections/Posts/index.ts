@@ -112,7 +112,11 @@ export const Posts: CollectionConfig<'posts'> = {
                 value: unknown,
                 { siblingData }: { siblingData: Record<string, unknown> },
               ) => {
-                if (siblingData?.PostType === 'image' || siblingData?.PostType === 'gallery')
+                if (
+                  siblingData?.PostType === 'image' ||
+                  siblingData?.PostType === 'gallery' ||
+                  siblingData?.PostType === 'cafe'
+                )
                   return true
                 if (!value) return 'El contenido es obligatorio'
                 return true
@@ -226,6 +230,10 @@ export const Posts: CollectionConfig<'posts'> = {
           label: 'Slides',
           value: 'slides',
         },
+        {
+          label: 'Café',
+          value: 'cafe',
+        },
       ],
     },
     {
@@ -251,6 +259,98 @@ export const Posts: CollectionConfig<'posts'> = {
           siblingData?.PostType === 'gallery' || siblingData?.PostType === 'image',
       },
     },
+    // ── Café fields (visible only when PostType === 'cafe') ──────────────
+    {
+      name: 'coffeeOrigin',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        condition: (_, siblingData) => siblingData?.PostType === 'cafe',
+        description: 'País o región de origen',
+      },
+    },
+    {
+      name: 'coffeeProcess',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        condition: (_, siblingData) => siblingData?.PostType === 'cafe',
+        description: 'Proceso (lavado, natural, honey, etc.)',
+      },
+    },
+    {
+      name: 'coffeeRoast',
+      type: 'select',
+      admin: {
+        position: 'sidebar',
+        condition: (_, siblingData) => siblingData?.PostType === 'cafe',
+        description: 'Nivel de tueste',
+      },
+      options: [
+        { label: 'Claro', value: 'light' },
+        { label: 'Medio', value: 'medium' },
+        { label: 'Oscuro', value: 'dark' },
+      ],
+    },
+    {
+      name: 'coffeeAltitude',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        condition: (_, siblingData) => siblingData?.PostType === 'cafe',
+        description: 'Altura (msnm)',
+      },
+    },
+    {
+      name: 'coffeeScore',
+      type: 'number',
+      min: 1,
+      max: 10,
+      admin: {
+        position: 'sidebar',
+        condition: (_, siblingData) => siblingData?.PostType === 'cafe',
+        description: 'Puntuación personal (1-10)',
+      },
+    },
+    {
+      name: 'coffeeFinca',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        condition: (_, siblingData) => siblingData?.PostType === 'cafe',
+        description: 'Nombre de la finca',
+      },
+    },
+    {
+      name: 'coffeeTostador',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        condition: (_, siblingData) => siblingData?.PostType === 'cafe',
+        description: 'Tostador',
+      },
+    },
+    {
+      name: 'coffeeTienda',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        condition: (_, siblingData) => siblingData?.PostType === 'cafe',
+        description: 'Tienda donde se compró',
+      },
+    },
+    {
+      name: 'coffeeTags',
+      type: 'relationship',
+      relationTo: 'badge-tags',
+      hasMany: true,
+      admin: {
+        position: 'sidebar',
+        condition: (_, siblingData) => siblingData?.PostType === 'cafe',
+        description: 'Tags/galardones del café',
+      },
+    },
+    // ── End café fields ──────────────────────────────────────────────────
     {
       name: 'publishedAt',
       type: 'date',
@@ -279,6 +379,17 @@ export const Posts: CollectionConfig<'posts'> = {
       },
       hasMany: true,
       relationTo: 'users',
+      hooks: {
+        beforeChange: [
+          ({ value, req }) => {
+            // Auto-assign current user if no authors set
+            if ((!value || (Array.isArray(value) && value.length === 0)) && req.user) {
+              return [req.user.id]
+            }
+            return value
+          },
+        ],
+      },
     },
     // This field is only used to populate the user data via the `populateAuthors` hook
     // This is because the `user` collection has access control locked to protect user privacy

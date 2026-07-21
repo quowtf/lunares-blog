@@ -33,7 +33,20 @@ export type GalleryItem = BaseArchiveItem & {
   images: ImageAsset[]
 }
 
-/** Imágenes con título, texto y fecha. */
+export type CafeBadge = {
+  name: string
+  color: string
+}
+
+export type CafeItem = BaseArchiveItem & {
+  type: 'cafe'
+  title: string
+  origin: string
+  process: string
+  image?: ImageAsset
+  badges: CafeBadge[]
+}
+
 export type SlidesItem = BaseArchiveItem & {
   type: 'slides'
   label?: string
@@ -42,7 +55,7 @@ export type SlidesItem = BaseArchiveItem & {
   images: ImageAsset[]
 }
 
-export type ArchiveItemType = ImageItem['type'] | GalleryItem['type'] | SlidesItem['type']
+export type ArchiveItemType = ImageItem['type'] | GalleryItem['type'] | SlidesItem['type'] | CafeItem['type']
 
 export function isImageItem(item: { type: string }): item is ImageItem {
   return item.type === 'image'

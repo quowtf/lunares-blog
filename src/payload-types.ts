@@ -71,6 +71,7 @@ export interface Config {
     posts: Post;
     media: Media;
     categories: Category;
+    'badge-tags': BadgeTag;
     users: User;
     comments: Comment;
     stories: Story;
@@ -95,6 +96,7 @@ export interface Config {
     posts: PostsSelect<false> | PostsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    'badge-tags': BadgeTagsSelect<false> | BadgeTagsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     comments: CommentsSelect<false> | CommentsSelect<true>;
     stories: StoriesSelect<false> | StoriesSelect<true>;
@@ -258,15 +260,31 @@ export interface Post {
     image?: (number | null) | Media;
     description?: string | null;
   };
-  PostType?: ('post' | 'image' | 'thought' | 'quote' | 'link' | 'video' | 'audio' | 'gallery' | 'slides') | null;
-  /**
-   * Gallery: solo imágenes. Slides: imágenes con título y descripción. Hasta 3.
-   */
+  PostType?:
+    | ('post' | 'image' | 'thought' | 'quote' | 'link' | 'video' | 'audio' | 'gallery' | 'slides' | 'cafe')
+    | null;
+  
   galleryImages?: (number | Media)[] | null;
-  /**
-   * Crear Stories (12 hrs) a partir de las imágenes al publicar.
-   */
+  
   postToStories?: boolean | null;
+  
+  coffeeOrigin?: string | null;
+  
+  coffeeProcess?: string | null;
+  
+  coffeeRoast?: ('light' | 'medium' | 'dark') | null;
+  
+  coffeeAltitude?: string | null;
+  
+  coffeeScore?: number | null;
+  
+  coffeeFinca?: string | null;
+
+  coffeeTostador?: string | null;
+
+  coffeeTienda?: string | null;
+  
+  coffeeTags?: (number | BadgeTag)[] | null;
   publishedAt?: string | null;
   authors?: (number | User)[] | null;
   populatedAuthors?:
@@ -384,6 +402,17 @@ export interface Category {
         id?: string | null;
       }[]
     | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "badge-tags".
+ */
+export interface BadgeTag {
+  id: number;
+  name: string;
+  color: 'red' | 'orange' | 'amber' | 'yellow' | 'green' | 'emerald' | 'blue' | 'violet' | 'pink' | 'gray';
   updatedAt: string;
   createdAt: string;
 }
@@ -1016,6 +1045,10 @@ export interface PayloadLockedDocument {
         value: number | Category;
       } | null)
     | ({
+        relationTo: 'badge-tags';
+        value: number | BadgeTag;
+      } | null)
+    | ({
         relationTo: 'users';
         value: number | User;
       } | null)
@@ -1245,6 +1278,15 @@ export interface PostsSelect<T extends boolean = true> {
   PostType?: T;
   galleryImages?: T;
   postToStories?: T;
+  coffeeOrigin?: T;
+  coffeeProcess?: T;
+  coffeeRoast?: T;
+  coffeeAltitude?: T;
+  coffeeScore?: T;
+  coffeeFinca?: T;
+  coffeeTostador?: T;
+  coffeeTienda?: T;
+  coffeeTags?: T;
   publishedAt?: T;
   authors?: T;
   populatedAuthors?:
@@ -1320,6 +1362,16 @@ export interface CategoriesSelect<T extends boolean = true> {
         label?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "badge-tags_select".
+ */
+export interface BadgeTagsSelect<T extends boolean = true> {
+  name?: T;
+  color?: T;
   updatedAt?: T;
   createdAt?: T;
 }

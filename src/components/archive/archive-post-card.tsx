@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 import type { Post } from '@/payload-types'
 
+import { CafeCard } from '@/components/archive/cards/cafe-card'
 import { GalleryCard } from '@/components/archive/cards/gallery-card'
 import { ImageCard } from '@/components/archive/cards/image-card'
 import { SlidesCard } from '@/components/archive/cards/slides-card'
@@ -13,9 +14,11 @@ import {
   getPostExcerpt,
   getPostCategory,
   getReadingTimeLabel,
+  mapPostToCafeItem,
   mapPostToGalleryItem,
   mapPostToImageItem,
   mapPostToSlidesItem,
+  type CafePostData,
   type GalleryPostData,
   type ImagePostData,
 } from '@/utilities/archive'
@@ -73,6 +76,10 @@ function canRenderThoughtQuote(post: ArchivePostData): boolean {
     post.id != null &&
     Boolean(post.publishedAt ?? post.createdAt)
   )
+}
+
+function canRenderCafe(post: ArchivePostData): post is CafePostData & ArchivePostData {
+  return post.PostType === 'cafe' && post.id != null && Boolean(post.publishedAt ?? post.createdAt)
 }
 
 function BookmarkIcon({ className }: { className?: string }) {
@@ -219,6 +226,11 @@ export function ArchivePostCard({ post, index = 0, priority = false }: ArchivePo
   if (canRenderImageCard(post)) {
     const item = mapPostToImageItem(post, { index })
     if (item) return <ImageCard item={item} priority={priority} />
+  }
+
+  if (canRenderCafe(post)) {
+    const item = mapPostToCafeItem(post, { index })
+    if (item) return <CafeCard item={item} priority={priority} />
   }
 
   if (canRenderThoughtQuote(post)) {
