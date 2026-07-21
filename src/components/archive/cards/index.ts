@@ -1,3 +1,4 @@
+export { CafeCard } from './cafe-card'
 export { GalleryCard } from './gallery-card'
 export { ImageCard } from './image-card'
 export { SlidesCard } from './slides-card'

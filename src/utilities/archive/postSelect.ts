@@ -10,4 +10,8 @@ export const archivePostSelect = {
   PostType: true,
   publishedAt: true,
   createdAt: true,
+  // Café fields (visible on card)
+  coffeeOrigin: true,
+  coffeeProcess: true,
+  coffeeTags: true,
 } as const

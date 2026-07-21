@@ -13,6 +13,7 @@ export {
   type ArchiveMonthGroup,
   type IndexedArchivePost,
 } from './groupPostsByMonth'
+export { mapPostToCafeItem, type CafePostData } from './mapPostToCafeItem'
 export {
   mapPostToGalleryItem,
   mapPostToSlidesItem,
