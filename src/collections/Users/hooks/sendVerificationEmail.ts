@@ -25,12 +25,12 @@ export const sendVerificationEmail: CollectionAfterChangeHook = async ({
     await req.payload.update({
       collection: 'users',
       id: doc.id,
-      req,
       data: {
         verificationCode: code,
         verificationExpiry: expiry.toISOString(),
         verificationAttempts: 0,
       },
+      overrideAccess: true,
       context: { skipVerificationEmail: true },
     })
 

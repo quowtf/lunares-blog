@@ -9,37 +9,50 @@ export const notifyComment: CollectionAfterChangeHook = async ({
 }) => {
   if (operation !== 'create') return doc
 
-  const { payload } = req
-
-  // Resolve user and post names for the message
-  let userName = 'Desconocido'
-  let userEmail = ''
-  let postTitle = 'Sin título'
-
+  // Entire notification is non-critical — never fail the comment creation
   try {
-    if (doc.user) {
-      const user = await payload.findByID({ collection: 'users', id: doc.user, req })
+    const { payload } = req
+
+    let userName = 'Desconocido'
+    let userEmail = ''
+    let postTitle = 'Sin título'
+
+    const userId = typeof doc.user === 'object' ? doc.user?.id : doc.user
+    const postId = typeof doc.post === 'object' ? doc.post?.id : doc.post
+
+    if (userId) {
+      const user = await payload.findByID({
+        collection: 'users',
+        id: userId,
+        depth: 0,
+        overrideAccess: true,
+      })
       userName = user.name || userName
       userEmail = user.email || ''
     }
 
-    if (doc.post) {
-      const post = await payload.findByID({ collection: 'posts', id: doc.post, req })
+    if (postId) {
+      const post = await payload.findByID({
+        collection: 'posts',
+        id: postId,
+        depth: 0,
+        overrideAccess: true,
+      })
       postTitle = post.title || postTitle
     }
-  } catch {
-    // If lookup fails, send with whatever info we have
+
+    const message = [
+      '💬 *Nuevo comentario en Lunares*',
+      '',
+      `Usuario: ${userName}${userEmail ? ` (${userEmail})` : ''}`,
+      `Post: "${postTitle}"`,
+      `Comentario: "${doc.text}"`,
+    ].join('\n')
+
+    await sendTelegramMessage(message)
+  } catch (error) {
+    console.error('[notifyComment] Notification failed:', error)
   }
-
-  const message = [
-    '💬 *Nuevo comentario en Lunares*',
-    '',
-    `Usuario: ${userName}${userEmail ? ` (${userEmail})` : ''}`,
-    `Post: "${postTitle}"`,
-    `Comentario: "${doc.text}"`,
-  ].join('\n')
-
-  await sendTelegramMessage(message)
 
   return doc
 }
