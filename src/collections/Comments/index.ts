@@ -1,5 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
+import { notifyComment } from './hooks/notifyComment'
+
 export const Comments: CollectionConfig = {
   slug: 'comments',
 
@@ -65,5 +67,6 @@ export const Comments: CollectionConfig = {
         return data
       },
     ],
+    afterChange: [notifyComment],
   },
 }

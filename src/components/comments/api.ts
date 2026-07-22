@@ -80,8 +80,6 @@ export async function signupUser(input: SignupInput): Promise<AuthUser> {
       name: input.name,
       email: input.email,
       password: input.password,
-      role: 'friend',
-      status: 'active',
     }),
   })
 
@@ -91,6 +89,7 @@ export async function signupUser(input: SignupInput): Promise<AuthUser> {
     throw new Error(getErrorMessage(data, 'No se pudo crear la cuenta'))
   }
 
+  // Login to get session cookie (user will be pending)
   return loginUser(input.email, input.password)
 }
 
@@ -109,5 +108,35 @@ export async function submitComment(postId: string | number, text: string): Prom
 
   if (!response.ok) {
     throw new Error(getErrorMessage(data, 'No se pudo enviar el comentario'))
+  }
+}
+
+export async function verifyEmail(email: string, code: string): Promise<void> {
+  const response = await fetch('/api/verify-email', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, code, action: 'verify' }),
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(data, 'No se pudo verificar el código'))
+  }
+}
+
+export async function resendVerificationCode(email: string): Promise<void> {
+  const response = await fetch('/api/verify-email', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, action: 'resend' }),
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(data, 'No se pudo reenviar el código'))
   }
 }

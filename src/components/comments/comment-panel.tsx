@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/utilities/ui'
 
-import { loginUser, signupUser, submitComment } from './api'
+import { loginUser, signupUser, submitComment, verifyEmail as verifyEmailApi, resendVerificationCode } from './api'
 import {
   COMMENT_ERROR_MESSAGE,
   COMMENT_PANEL_EXIT_MS,
@@ -25,7 +25,9 @@ type CommentPanelProps = {
 
 function getInitialView(user: AuthUser | null, isLoadingUser: boolean): PanelView | null {
   if (isLoadingUser) return null
-  return user ? 'comment' : 'login'
+  if (!user) return 'login'
+  if (user.status === 'pending') return 'verify'
+  return 'comment'
 }
 
 export function CommentPanel({ postId }: CommentPanelProps) {
@@ -48,6 +50,10 @@ export function CommentPanel({ postId }: CommentPanelProps) {
 
   const [commentText, setCommentText] = useState('')
 
+  const [verifyCode, setVerifyCode] = useState('')
+  const [verifyEmail, setVerifyEmail] = useState('')
+  const [resendDisabled, setResendDisabled] = useState(false)
+
   useEffect(() => {
     if (!isActive) {
       setHasError(false)
@@ -60,6 +66,10 @@ export function CommentPanel({ postId }: CommentPanelProps) {
     setHasError(false)
     setCommentText('')
     setView(getInitialView(user, isLoadingUser))
+
+    if (user?.status === 'pending' && user.email) {
+      setVerifyEmail(user.email)
+    }
   }, [isActive, user, isLoadingUser])
 
   useEffect(() => {
@@ -98,7 +108,13 @@ export function CommentPanel({ postId }: CommentPanelProps) {
     try {
       const authenticatedUser = await loginUser(loginEmail, loginPassword)
       setUser(authenticatedUser)
-      setView('comment')
+
+      if (authenticatedUser.status === 'pending') {
+        setVerifyEmail(loginEmail)
+        setView('verify')
+      } else {
+        setView('comment')
+      }
     } catch {
       setHasError(true)
     } finally {
@@ -118,12 +134,50 @@ export function CommentPanel({ postId }: CommentPanelProps) {
         password: signupPassword,
       })
       setUser(authenticatedUser)
+
+      if (authenticatedUser.status === 'pending') {
+        setVerifyEmail(signupEmail)
+        setView('verify')
+      } else {
+        setView('comment')
+      }
+    } catch {
+      setHasError(true)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  async function handleVerify(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setHasError(false)
+    setIsSubmitting(true)
+
+    try {
+      await verifyEmailApi(verifyEmail || signupEmail, verifyCode)
+      if (user) {
+        setUser({ ...user, status: 'active' })
+      }
       setView('comment')
     } catch {
       setHasError(true)
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  async function handleResend() {
+    setHasError(false)
+    setResendDisabled(true)
+
+    try {
+      await resendVerificationCode(verifyEmail || signupEmail)
+    } catch {
+      setHasError(true)
+    }
+
+    // Cooldown 30 seconds
+    window.setTimeout(() => setResendDisabled(false), 30_000)
   }
 
   async function handleComment(event: React.FormEvent<HTMLFormElement>) {
@@ -163,6 +217,7 @@ export function CommentPanel({ postId }: CommentPanelProps) {
             >
               {view === 'login' && 'Inicia sesión para comentar'}
               {view === 'signup' && 'Crea tu cuenta'}
+              {view === 'verify' && 'Verifica tu correo'}
               {view === 'comment' && 'Tu comentario'}
               {view === null && 'Cargando'}
             </p>
@@ -308,6 +363,50 @@ export function CommentPanel({ postId }: CommentPanelProps) {
 
                 <Button disabled={isSubmitting} size="sm" type="submit">
                   {isSubmitting ? 'Creando…' : 'Crear cuenta'}
+                </Button>
+              </div>
+            </form>
+          ) : null}
+
+          {view === 'verify' ? (
+            <form className="space-y-3" onSubmit={handleVerify}>
+              <p className="text-sm text-muted-foreground">
+                Enviamos un código de 6 dígitos a tu correo.
+              </p>
+
+              <div className="space-y-1.5">
+                <Label
+                  className="text-xs text-muted-foreground"
+                  htmlFor={`${panelId}-verify-code`}
+                >
+                  Código
+                </Label>
+                <Input
+                  autoComplete="one-time-code"
+                  id={`${panelId}-verify-code`}
+                  inputMode="numeric"
+                  maxLength={6}
+                  onChange={(event) => setVerifyCode(event.target.value.replace(/\D/g, ''))}
+                  pattern="[0-9]{6}"
+                  placeholder="000000"
+                  required
+                  type="text"
+                  value={verifyCode}
+                />
+              </div>
+
+              <div className="flex items-center justify-between gap-3 pt-1">
+                <button
+                  className="text-xs text-muted-foreground underline-offset-4 transition hover:text-foreground hover:underline disabled:opacity-50 disabled:no-underline"
+                  disabled={resendDisabled}
+                  onClick={handleResend}
+                  type="button"
+                >
+                  {resendDisabled ? 'Código reenviado' : 'Reenviar código'}
+                </button>
+
+                <Button disabled={isSubmitting || verifyCode.length !== 6} size="sm" type="submit">
+                  {isSubmitting ? 'Verificando…' : 'Verificar'}
                 </Button>
               </div>
             </form>

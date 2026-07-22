@@ -6,4 +6,4 @@ export type AuthUser = {
   status?: 'active' | 'pending' | 'blocked' | null
 }
 
-export type PanelView = 'login' | 'signup' | 'comment' | 'success'
+export type PanelView = 'login' | 'signup' | 'verify' | 'comment' | 'success'

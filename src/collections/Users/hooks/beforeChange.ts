@@ -8,6 +8,6 @@ export const enforceFriendDefaults: CollectionBeforeChangeHook = ({ data, operat
   return {
     ...data,
     role: 'friend',
-    status: 'active',
+    status: 'pending',
   }
 }

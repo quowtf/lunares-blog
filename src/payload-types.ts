@@ -425,6 +425,9 @@ export interface User {
   name: string;
   role: 'admin' | 'friend';
   status?: ('active' | 'pending' | 'blocked') | null;
+  verificationCode?: string | null;
+  verificationExpiry?: string | null;
+  verificationAttempts?: number | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -1383,6 +1386,9 @@ export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
   status?: T;
+  verificationCode?: T;
+  verificationExpiry?: T;
+  verificationAttempts?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

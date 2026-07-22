@@ -1,6 +1,8 @@
 import type { CollectionConfig } from 'payload'
 
 import { enforceFriendDefaults } from './hooks/beforeChange'
+import { notifyRegistration } from './hooks/notifyRegistration'
+import { sendVerificationEmail } from './hooks/sendVerificationEmail'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -69,10 +71,29 @@ export const Users: CollectionConfig = {
         { label: 'Blocked', value: 'blocked' },
       ],
     },
+
+    // Email verification fields (hidden from admin)
+    {
+      name: 'verificationCode',
+      type: 'text',
+      admin: { hidden: true },
+    },
+    {
+      name: 'verificationExpiry',
+      type: 'date',
+      admin: { hidden: true },
+    },
+    {
+      name: 'verificationAttempts',
+      type: 'number',
+      defaultValue: 0,
+      admin: { hidden: true },
+    },
   ],
 
   hooks: {
     beforeChange: [enforceFriendDefaults],
+    afterChange: [notifyRegistration, sendVerificationEmail],
   },
 
   timestamps: true,
