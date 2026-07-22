@@ -19,20 +19,25 @@ export const sendVerificationEmail: CollectionAfterChangeHook = async ({
   const code = generateVerificationCode()
   const expiry = getVerificationExpiry()
 
-  // Store code and expiry on user (bypass hooks to avoid loops)
-  await req.payload.update({
-    collection: 'users',
-    id: doc.id,
-    data: {
-      verificationCode: code,
-      verificationExpiry: expiry.toISOString(),
-      verificationAttempts: 0,
-    },
-    // Skip hooks to prevent infinite loop
-    context: { skipVerificationEmail: true },
-  })
+  // Store code and expiry on user, then send email
+  // Wrapped in try/catch so verification failure doesn't break registration
+  try {
+    await req.payload.update({
+      collection: 'users',
+      id: doc.id,
+      req,
+      data: {
+        verificationCode: code,
+        verificationExpiry: expiry.toISOString(),
+        verificationAttempts: 0,
+      },
+      context: { skipVerificationEmail: true },
+    })
 
-  await sendVerificationCode(doc.email, code)
+    await sendVerificationCode(doc.email, code)
+  } catch (error) {
+    console.error('[sendVerificationEmail] Failed:', error)
+  }
 
   return doc
 }

@@ -18,13 +18,13 @@ export const notifyComment: CollectionAfterChangeHook = async ({
 
   try {
     if (doc.user) {
-      const user = await payload.findByID({ collection: 'users', id: doc.user })
+      const user = await payload.findByID({ collection: 'users', id: doc.user, req })
       userName = user.name || userName
       userEmail = user.email || ''
     }
 
     if (doc.post) {
-      const post = await payload.findByID({ collection: 'posts', id: doc.post })
+      const post = await payload.findByID({ collection: 'posts', id: doc.post, req })
       postTitle = post.title || postTitle
     }
   } catch {
