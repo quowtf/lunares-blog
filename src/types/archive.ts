@@ -55,7 +55,15 @@ export type SlidesItem = BaseArchiveItem & {
   images: ImageAsset[]
 }
 
-export type ArchiveItemType = ImageItem['type'] | GalleryItem['type'] | SlidesItem['type'] | CafeItem['type']
+export type RodadaItem = BaseArchiveItem & {
+  type: 'rodada'
+  title: string
+  content?: string
+  heroImage: ImageAsset
+  images: ImageAsset[]
+}
+
+export type ArchiveItemType = ImageItem['type'] | GalleryItem['type'] | SlidesItem['type'] | CafeItem['type'] | RodadaItem['type']
 
 export function isImageItem(item: { type: string }): item is ImageItem {
   return item.type === 'image'

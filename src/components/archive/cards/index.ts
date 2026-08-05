@@ -1,5 +1,6 @@
 export { CafeCard } from './cafe-card'
 export { GalleryCard } from './gallery-card'
 export { ImageCard } from './image-card'
+export { RodadaCard } from './rodada-card'
 export { SlidesCard } from './slides-card'
 export { ThoughtQuoteCard, type ThoughtQuoteCardProps } from './thought-quote-card'

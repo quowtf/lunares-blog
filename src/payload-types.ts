@@ -261,29 +261,51 @@ export interface Post {
     description?: string | null;
   };
   PostType?:
-    | ('post' | 'image' | 'thought' | 'quote' | 'link' | 'video' | 'audio' | 'gallery' | 'slides' | 'cafe')
+    | ('post' | 'image' | 'thought' | 'quote' | 'link' | 'video' | 'audio' | 'gallery' | 'slides' | 'cafe' | 'rodada')
     | null;
-  
+  /**
+   * Gallery: solo imágenes. Slides: imágenes con título y descripción. Hasta 3.
+   */
   galleryImages?: (number | Media)[] | null;
-  
+  /**
+   * Crear Stories (12 hrs) a partir de las imágenes al publicar.
+   */
   postToStories?: boolean | null;
-  
+  /**
+   * País o región de origen
+   */
   coffeeOrigin?: string | null;
-  
+  /**
+   * Proceso (lavado, natural, honey, etc.)
+   */
   coffeeProcess?: string | null;
-  
+  /**
+   * Nivel de tueste
+   */
   coffeeRoast?: ('light' | 'medium' | 'dark') | null;
-  
+  /**
+   * Altura (msnm)
+   */
   coffeeAltitude?: string | null;
-  
+  /**
+   * Puntuación personal (1-10)
+   */
   coffeeScore?: number | null;
-  
+  /**
+   * Nombre de la finca
+   */
   coffeeFinca?: string | null;
-
+  /**
+   * Tostador
+   */
   coffeeTostador?: string | null;
-
+  /**
+   * Tienda donde se compró
+   */
   coffeeTienda?: string | null;
-  
+  /**
+   * Tags/galardones del café
+   */
   coffeeTags?: (number | BadgeTag)[] | null;
   publishedAt?: string | null;
   authors?: (number | User)[] | null;

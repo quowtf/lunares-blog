@@ -5,6 +5,7 @@ import type { Post } from '@/payload-types'
 import { CafeCard } from '@/components/archive/cards/cafe-card'
 import { GalleryCard } from '@/components/archive/cards/gallery-card'
 import { ImageCard } from '@/components/archive/cards/image-card'
+import { RodadaCard } from '@/components/archive/cards/rodada-card'
 import { SlidesCard } from '@/components/archive/cards/slides-card'
 import { ThoughtQuoteCard } from '@/components/archive/cards/thought-quote-card'
 import { Media } from '@/components/Media'
@@ -17,10 +18,12 @@ import {
   mapPostToCafeItem,
   mapPostToGalleryItem,
   mapPostToImageItem,
+  mapPostToRodadaItem,
   mapPostToSlidesItem,
   type CafePostData,
   type GalleryPostData,
   type ImagePostData,
+  type RodadaPostData,
 } from '@/utilities/archive'
 import {
   getVariantByIndex,
@@ -80,6 +83,12 @@ function canRenderThoughtQuote(post: ArchivePostData): boolean {
 
 function canRenderCafe(post: ArchivePostData): post is CafePostData & ArchivePostData {
   return post.PostType === 'cafe' && post.id != null && Boolean(post.publishedAt ?? post.createdAt)
+}
+
+function canRenderRodada(post: ArchivePostData): post is RodadaPostData & ArchivePostData {
+  return (
+    post.PostType === 'rodada' && post.id != null && Boolean(post.publishedAt ?? post.createdAt)
+  )
 }
 
 function BookmarkIcon({ className }: { className?: string }) {
@@ -231,6 +240,11 @@ export function ArchivePostCard({ post, index = 0, priority = false }: ArchivePo
   if (canRenderCafe(post)) {
     const item = mapPostToCafeItem(post, { index })
     if (item) return <CafeCard item={item} priority={priority} />
+  }
+
+  if (canRenderRodada(post)) {
+    const item = mapPostToRodadaItem(post, { index })
+    if (item) return <RodadaCard item={item} priority={priority} />
   }
 
   if (canRenderThoughtQuote(post)) {

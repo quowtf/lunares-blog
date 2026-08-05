@@ -234,6 +234,10 @@ export const Posts: CollectionConfig<'posts'> = {
           label: 'Café',
           value: 'cafe',
         },
+        {
+          label: 'Rodada',
+          value: 'rodada',
+        },
       ],
     },
     {
@@ -245,7 +249,9 @@ export const Posts: CollectionConfig<'posts'> = {
         position: 'sidebar',
         description: 'Gallery: solo imágenes. Slides: imágenes con título y descripción. Hasta 3.',
         condition: (_, siblingData) =>
-          siblingData?.PostType === 'gallery' || siblingData?.PostType === 'slides',
+          siblingData?.PostType === 'gallery' ||
+          siblingData?.PostType === 'slides' ||
+          siblingData?.PostType === 'rodada',
       },
     },
     {

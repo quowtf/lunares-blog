@@ -20,5 +20,6 @@ export {
   type GalleryPostData,
 } from './mapPostToGalleryItem'
 export { mapPostToImageItem, type ImagePostData } from './mapPostToImageItem'
+export { mapPostToRodadaItem, type RodadaPostData } from './mapPostToRodadaItem'
 export { mediaToImageAsset } from './mediaToImageAsset'
 export { archivePostSelect } from './postSelect'
