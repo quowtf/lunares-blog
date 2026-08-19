@@ -1,6 +1,5 @@
-import Link from 'next/link'
-
 import { ArchiveSearch } from './archive-search'
+import { ArchiveTitleLink } from './archive-title-link'
 import { NewEntryButtonAuth } from './new-entry-button-auth'
 import { SiteNav } from './site-nav'
 
@@ -9,9 +8,7 @@ export function ArchiveHero() {
     <header className="grid gap-8 md:grid-cols-[1fr_auto] md:items-start">
       <div className="space-y-4">
         <h1 className="font-serif text-6xl leading-none tracking-[0.12em] text-foreground sm:text-7xl md:text-8xl">
-          <Link href="/momentos" className="hover:opacity-80 transition-opacity">
-            Lunares
-          </Link>
+          <ArchiveTitleLink />
         </h1>
         <p className="max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
           A collection of thoughts, photographs, and stories.
