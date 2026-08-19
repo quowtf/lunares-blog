@@ -78,7 +78,11 @@ export default async function Page({ params: paramsPromise }: Args) {
   const decodedSlug = decodeURIComponent(slug)
   const url = '/' + decodedSlug
 
-  const page = await queryPageBySlug({ slug: decodedSlug })
+  const [page, post] = await Promise.all([
+    queryPageBySlug({ slug: decodedSlug }),
+    queryPostBySlug({ slug: decodedSlug }),
+  ])
+
   if (page) {
     return (
       <article className="pt-16 pb-24">
@@ -91,7 +95,6 @@ export default async function Page({ params: paramsPromise }: Args) {
     )
   }
 
-  const post = await queryPostBySlug({ slug: decodedSlug })
   if (post && isEditorialPost(post)) {
     const [adjacent, fallbackRelated] = await Promise.all([
       getAdjacentPosts(post.slug),

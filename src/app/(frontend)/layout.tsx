@@ -18,14 +18,14 @@ import './globals.css'
 
 const displaySerif = Cormorant_Garamond({
   subsets: ['latin'],
-  weight: ['300', '400', '500'],
+  weight: ['300', '400'],
   variable: '--font-display',
   display: 'swap',
 })
 
 const proseSerif = Source_Serif_4({
   subsets: ['latin'],
-  weight: ['300', '400', '600'],
+  weight: ['300', '400'],
   style: ['normal', 'italic'],
   variable: '--font-prose',
   display: 'swap',
