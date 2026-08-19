@@ -1,4 +1,5 @@
 import type { SlidesItem } from '@/types/archive'
+import { CommentPanel, CommentTrigger } from '@/components/comments'
 
 import {
   Card,
@@ -16,6 +17,8 @@ type SlidesCardProps = {
 
 export function SlidesCard({ item, priority = false }: SlidesCardProps) {
   return (
+    <div>
+
     <Card className="space-y-4 p-5" variant={item.variant}>
       <header className="space-y-2">
         {item.label ? <Eyebrow>{item.label}</Eyebrow> : null}
@@ -37,9 +40,13 @@ export function SlidesCard({ item, priority = false }: SlidesCardProps) {
         ))}
       </div>
 
-      <footer>
+      <footer className="flex items-center justify-between">
         <Meta>{item.date}</Meta>
+        <CommentTrigger postId={item.id} />
       </footer>
+
     </Card>
+    <CommentPanel postId={item.id} />
+    </div>
   )
 }
