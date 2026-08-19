@@ -25,7 +25,7 @@ const nextConfig: NextConfig = {
         pathname: '/media/**',
       },
     ],
-    qualities: [100],
+    qualities: [80],
     remotePatterns: getMediaRemotePatterns(),
   },
   webpack: (webpackConfig) => {

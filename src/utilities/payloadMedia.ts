@@ -57,16 +57,5 @@ export function shouldUseUnoptimizedImage(src: string, mimeType?: string | null)
 
   if (isNonOptimizableImage(src, mimeType)) return true
 
-  if (src.includes('.blob.vercel-storage.com')) return true
-
-  if (src.startsWith('/api/media/')) return true
-
-  try {
-    const { pathname } = new URL(src, 'http://localhost')
-    if (pathname.startsWith('/api/media/')) return true
-  } catch {
-    // ignore invalid URLs
-  }
-
   return false
 }
