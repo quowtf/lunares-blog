@@ -25,7 +25,7 @@ export function IntroPage() {
         <div className="flex flex-col gap-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
           <p>Exactamente en esta página, deberías ver fotos que expiran en 24hrs.</p>
           <p>
-            Si estás viendo esta página entonces vuelve en otro día y tal vez tengas suerte.
+            Si estás leyendo esto, vuelve otro día y tal vez tengas suerte.
           </p>
         </div>
       </section>
