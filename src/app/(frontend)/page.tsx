@@ -15,7 +15,7 @@ export default async function HomePage() {
 
   return (
     <CommentLayout>
-      <main className="min-h-screen bg-background px-4 py-12 text-foreground sm:px-6 lg:px-10">
+      <main className="min-h-screen bg-background px-4 py-10 text-foreground sm:px-6 lg:px-10">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-10">
           <ArchiveHero />
 

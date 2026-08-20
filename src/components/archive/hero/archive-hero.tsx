@@ -11,7 +11,7 @@ export function ArchiveHero() {
           <ArchiveTitleLink />
         </h1>
         <p className="max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-          A collection of thoughts, photographs, and stories.
+          Ya bajé de la montaña, compleja travesía, invaluable resultado, Rob.
         </p>
         <SiteNav />
       </div>
@@ -22,14 +22,14 @@ export function ArchiveHero() {
           <NewEntryButtonAuth />
         </nav>
 
-        <figure className="max-w-64 text-left md:text-right">
+        {/* <figure className="max-w-64 text-left md:text-right">
           <blockquote className="font-serif text-base leading-6 text-foreground">
             We do not remember days, we remember moments.
           </blockquote>
           <figcaption className="mt-2 text-xs text-muted-foreground">
             &mdash; Cesare Pavese
           </figcaption>
-        </figure>
+        </figure> */}
       </div>
     </header>
   )
