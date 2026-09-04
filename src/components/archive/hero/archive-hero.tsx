@@ -11,7 +11,7 @@ export function ArchiveHero() {
           <ArchiveTitleLink />
         </h1>
         <p className="max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-          Ya bajé de la montaña, compleja travesía, invaluable resultado, Rob.
+          Ya bajé de la montaña, invaluable travesía, 🤓.
         </p>
         <SiteNav />
       </div>
