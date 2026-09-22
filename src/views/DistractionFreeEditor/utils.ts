@@ -15,7 +15,6 @@ export interface CreateDraftPayload {
   categories: number[] | null
   relatedPosts: null
   galleryImages: null
-  postToStories: false
   category?: string
 }
 
@@ -144,7 +143,6 @@ export function buildCreatePayload(
     categories: null,
     relatedPosts: null,
     galleryImages: null,
-    postToStories: false,
     ...(category ? { category } : {}),
   }
 }

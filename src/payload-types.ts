@@ -268,10 +268,6 @@ export interface Post {
    */
   galleryImages?: (number | Media)[] | null;
   /**
-   * Crear Stories (12 hrs) a partir de las imágenes al publicar.
-   */
-  postToStories?: boolean | null;
-  /**
    * País o región de origen
    */
   coffeeOrigin?: string | null;
@@ -1302,7 +1298,6 @@ export interface PostsSelect<T extends boolean = true> {
       };
   PostType?: T;
   galleryImages?: T;
-  postToStories?: T;
   coffeeOrigin?: T;
   coffeeProcess?: T;
   coffeeRoast?: T;

@@ -16,7 +16,6 @@ import { Banner } from '../../blocks/Banner/config'
 import { Code } from '../../blocks/Code/config'
 import { MediaBlock } from '../../blocks/MediaBlock/config'
 import { generatePreviewPath } from '../../utilities/generatePreviewPath'
-import { createStoriesFromGallery } from './hooks/createStoriesFromGallery'
 import { deleteRelatedComments } from './hooks/deleteRelatedComments'
 import { populateAuthors } from './hooks/populateAuthors'
 import { revalidateDelete, revalidatePost } from './hooks/revalidatePost'
@@ -254,17 +253,6 @@ export const Posts: CollectionConfig<'posts'> = {
           siblingData?.PostType === 'rodada',
       },
     },
-    {
-      name: 'postToStories',
-      type: 'checkbox',
-      defaultValue: false,
-      admin: {
-        position: 'sidebar',
-        description: 'Crear Stories (12 hrs) a partir de las imágenes al publicar.',
-        condition: (_, siblingData) =>
-          siblingData?.PostType === 'gallery' || siblingData?.PostType === 'image',
-      },
-    },
     // ── Café fields (visible only when PostType === 'cafe') ──────────────
     {
       name: 'coffeeOrigin',
@@ -424,7 +412,7 @@ export const Posts: CollectionConfig<'posts'> = {
     slugField(),
   ],
   hooks: {
-    afterChange: [revalidatePost, createStoriesFromGallery],
+    afterChange: [revalidatePost],
     afterRead: [populateAuthors],
     beforeDelete: [deleteRelatedComments],
     afterDelete: [revalidateDelete],
