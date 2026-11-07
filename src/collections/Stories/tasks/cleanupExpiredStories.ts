@@ -40,6 +40,9 @@ export const cleanupExpiredStories: TaskHandler<{
   const mediaIds = result.docs
     .filter(d => d.image && typeof d.image === 'object' && 'id' in d.image)
     .map(d => (d.image as { id: string | number }).id)
+  const privateMediaIds = result.docs
+    .filter(d => d.privateImage && typeof d.privateImage === 'object' && 'id' in d.privateImage)
+    .map(d => (d.privateImage as { id: string | number }).id)
 
   let errors: string[] = []
 
@@ -70,6 +73,22 @@ export const cleanupExpiredStories: TaskHandler<{
       })
     } catch (err) {
       const msg = `Failed to delete media: ${err}`
+      logger.error({ err, msg: '[Cleanup] ' + msg })
+      errors.push(msg)
+    }
+  }
+
+  if (privateMediaIds.length > 0) {
+    try {
+      await payload.delete({
+        collection: 'private-media',
+        where: {
+          id: { in: privateMediaIds },
+        },
+        overrideAccess: true,
+      })
+    } catch (err) {
+      const msg = `Failed to delete private media: ${err}`
       logger.error({ err, msg: '[Cleanup] ' + msg })
       errors.push(msg)
     }

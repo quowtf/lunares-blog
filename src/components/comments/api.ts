@@ -83,14 +83,17 @@ export async function signupUser(input: SignupInput): Promise<AuthUser> {
     }),
   })
 
-  const data = await response.json()
+  const data = (await response.json()) as ApiError & { doc?: AuthUser }
 
   if (!response.ok) {
     throw new Error(getErrorMessage(data, 'No se pudo crear la cuenta'))
   }
 
-  // Login to get session cookie (user will be pending)
-  return loginUser(input.email, input.password)
+  if (!data.doc) {
+    throw new Error('No se pudo crear la cuenta')
+  }
+
+  return data.doc
 }
 
 export async function submitComment(postId: string | number, text: string): Promise<void> {

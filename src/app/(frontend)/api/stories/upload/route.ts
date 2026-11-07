@@ -26,6 +26,8 @@ export async function POST(req: Request): Promise<Response> {
     const formData = await req.formData()
 
     const caption = formData.get('caption') as string | null
+    const rawVisibility = formData.get('visibility')
+    const visibility = rawVisibility === 'private' ? 'private' : 'public'
     let imageFile = formData.get('image') as File | null
 
     if (!imageFile) {
@@ -65,20 +67,31 @@ export async function POST(req: Request): Promise<Response> {
       })
     }
 
-    // Upload image to media collection
-    const mediaDoc = await payload.create({
-      collection: 'media',
-      data: {
-        alt: caption || 'Story image',
-        filename: imageFile.name,
-      },
-      file: {
-        name: imageFile.name,
-        data: buffer,
-        mimetype: mimetype,
-        size: buffer.length,
-      },
-    })
+    // Private stories must use the private-media collection so the file is
+    // never exposed through the public media route.
+    const mediaData = {
+      alt: caption || 'Story image',
+      filename: imageFile.name,
+    }
+    const mediaFile = {
+      name: imageFile.name,
+      data: buffer,
+      mimetype: mimetype,
+      size: buffer.length,
+    }
+
+    const mediaDoc =
+      visibility === 'private'
+        ? await payload.create({
+            collection: 'private-media',
+            data: mediaData,
+            file: mediaFile,
+          })
+        : await payload.create({
+            collection: 'media',
+            data: mediaData,
+            file: mediaFile,
+          })
 
     // Get the first admin user as author (assumed to be the owner)
     const users = await payload.find({
@@ -101,10 +114,12 @@ export async function POST(req: Request): Promise<Response> {
     const story = await payload.create({
       collection: 'stories',
       data: {
-        image: mediaDoc.id,
+        ...(visibility === 'private'
+          ? { privateImage: mediaDoc.id }
+          : { image: mediaDoc.id }),
         caption: caption || '',
         author: authorId,
-        visibility: 'public',
+        visibility,
         duration: '24',
       } as unknown as Story,
     })

@@ -9,6 +9,7 @@ import { Categories } from './collections/Categories'
 import { Comments } from './collections/Comments'
 import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
+import { PrivateMedia } from './collections/PrivateMedia'
 import { Posts } from './collections/Posts'
 import { Stories } from './collections/Stories'
 import { cleanupExpiredStories } from './collections/Stories/tasks/cleanupExpiredStories'
@@ -84,7 +85,17 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URL || '',
     },
   }),
-  collections: [Pages, Posts, Media, Categories, BadgeTags, Users, Comments, Stories],
+  collections: [
+    Pages,
+    Posts,
+    Media,
+    PrivateMedia,
+    Categories,
+    BadgeTags,
+    Users,
+    Comments,
+    Stories,
+  ],
   cors: [getServerSideURL()].filter(Boolean),
   globals: [Header, Footer],
   plugins,

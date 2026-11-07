@@ -5,7 +5,12 @@ export const filterActiveStories: CollectionBeforeOperationHook = ({
   context,
   operation,
 }) => {
-  if (operation !== 'find') {
+  // Payload runs `beforeOperation` for both find and findByID with the
+  // deprecated `read` operation. `findByID` has an `id` and no `where`, so it
+  // cannot be filtered here; its callers validate expiry manually.
+  const isRead = operation === 'read' || operation === 'find'
+  const isFindByID = isRead && 'id' in args && args.id !== undefined
+  if ((!isRead || isFindByID) && operation !== 'count') {
     return args
   }
 
@@ -20,13 +25,17 @@ export const filterActiveStories: CollectionBeforeOperationHook = ({
     },
   }
 
-  if (args.where && Object.keys(args.where).length > 0) {
-    args.where = {
-      and: [args.where, expiresAtFilter],
+  // findByID is already excluded above, so `args` has a `where` here even
+  // though the hook's discriminated union does not narrow automatically.
+  const queryArgs = args as { where?: Record<string, unknown> }
+
+  if (queryArgs.where && Object.keys(queryArgs.where).length > 0) {
+    queryArgs.where = {
+      and: [queryArgs.where, expiresAtFilter],
     }
   } else {
-    args.where = expiresAtFilter
+    queryArgs.where = expiresAtFilter
   }
 
-  return args
+  return queryArgs as typeof args
 }

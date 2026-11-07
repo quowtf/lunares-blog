@@ -4,6 +4,7 @@ import { link } from '../../fields/link'
 import { isAdmin } from '../../access/isAdmin'
 import { storiesReadAccess } from './access/storiesReadAccess'
 import { computeExpiresAt } from './hooks/computeExpiresAt'
+import { enforcePrivateStoryImage } from './hooks/enforcePrivateStoryImage'
 import { setAuthorFromUser } from './hooks/setAuthorFromUser'
 import { filterActiveStories } from './hooks/filterActiveStories'
 
@@ -20,7 +21,7 @@ export const Stories: CollectionConfig = {
     delete: isAdmin,
   },
   hooks: {
-    beforeChange: [setAuthorFromUser, computeExpiresAt],
+    beforeChange: [setAuthorFromUser, enforcePrivateStoryImage, computeExpiresAt],
     beforeOperation: [filterActiveStories],
   },
   fields: [
@@ -29,6 +30,21 @@ export const Stories: CollectionConfig = {
       type: 'upload',
       relationTo: 'media',
       required: false,
+      admin: {
+        condition: (_, siblingData) => siblingData?.visibility !== 'private',
+        description: 'Imagen para historias públicas.',
+      },
+    },
+    {
+      name: 'privateImage',
+      type: 'upload',
+      relationTo: 'private-media',
+      required: false,
+      admin: {
+        condition: (_, siblingData) => siblingData?.visibility === 'private',
+        description:
+          'Imagen para historias privadas. Solo la ven el admin y los amigos activos.',
+      },
     },
     {
       name: 'caption',
@@ -50,6 +66,10 @@ export const Stories: CollectionConfig = {
       name: 'visibility',
       type: 'select',
       defaultValue: 'public',
+      admin: {
+        description:
+          'Las historias privadas expiran siempre a las 6 horas y solo las ven el admin y los amigos activos.',
+      },
       options: [
         {
           label: 'Public',
@@ -73,6 +93,10 @@ export const Stories: CollectionConfig = {
       name: 'duration',
       type: 'select',
       defaultValue: '24',
+      admin: {
+        // Irrelevant for private stories: they always expire after 6 hours
+        condition: (_, siblingData) => siblingData?.visibility !== 'private',
+      },
       options: [
         {
           label: '12 horas',
@@ -171,6 +195,7 @@ export const Stories: CollectionConfig = {
       type: 'date',
       admin: {
         readOnly: false,
+        description: 'Las historias privadas expiran siempre a las 6 horas.',
       },
     },
     // Telemetry fields

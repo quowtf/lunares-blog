@@ -7,7 +7,7 @@ import {
 } from '@payloadcms/richtext-lexical'
 
 import { anyone } from '@/access/anyone'
-import { authenticated } from '@/access/authenticated'
+import { isAdmin } from '@/access/isAdmin'
 import { vercelPrivateBlobFileHandler } from '@/utilities/vercelPrivateBlobFileHandler'
 
 import { stripMetadata } from './hooks/stripMetadata'
@@ -18,10 +18,10 @@ export const Media: CollectionConfig = {
   folders: true,
 
   access: {
-    create: authenticated,
-    delete: authenticated,
+    create: isAdmin,
+    delete: isAdmin,
     read: anyone,
-    update: authenticated,
+    update: isAdmin,
   },
 
   hooks: {

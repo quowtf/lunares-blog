@@ -31,6 +31,7 @@ export const plugins: Plugin[] = [
     access: getBlobStoreAccess() as 'public',
     collections: {
       media: true,
+      'private-media': true,
     },
     token: process.env.BLOB_READ_WRITE_TOKEN || '',
   }),

@@ -1,8 +1,20 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, FieldAccess } from 'payload'
 
 import { enforceFriendDefaults } from './hooks/beforeChange'
+import { beforeLogin } from './hooks/beforeLogin'
 import { notifyRegistration } from './hooks/notifyRegistration'
 import { sendVerificationEmail } from './hooks/sendVerificationEmail'
+
+const isAdminField: FieldAccess = ({ req }) => {
+  return req.user?.role === 'admin'
+}
+
+const isAdminOrSelf: FieldAccess = ({ id, req }) => {
+  if (req.user?.role === 'admin') return true
+  if (!req.user || id === undefined || id === null) return false
+
+  return String(req.user.id) === String(id)
+}
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -53,6 +65,11 @@ export const Users: CollectionConfig = {
     {
       name: 'role',
       type: 'select',
+      access: {
+        create: isAdminField,
+        read: isAdminOrSelf,
+        update: isAdminField,
+      },
       defaultValue: 'friend',
       options: [
         { label: 'Admin', value: 'admin' },
@@ -64,6 +81,11 @@ export const Users: CollectionConfig = {
     {
       name: 'status',
       type: 'select',
+      access: {
+        create: isAdminField,
+        read: isAdminOrSelf,
+        update: isAdminField,
+      },
       defaultValue: 'active',
       options: [
         { label: 'Active', value: 'active' },
@@ -76,22 +98,38 @@ export const Users: CollectionConfig = {
     {
       name: 'verificationCode',
       type: 'text',
+      access: {
+        create: isAdminField,
+        read: isAdminField,
+        update: isAdminField,
+      },
       admin: { hidden: true },
     },
     {
       name: 'verificationExpiry',
       type: 'date',
+      access: {
+        create: isAdminField,
+        read: isAdminField,
+        update: isAdminField,
+      },
       admin: { hidden: true },
     },
     {
       name: 'verificationAttempts',
       type: 'number',
+      access: {
+        create: isAdminField,
+        read: isAdminField,
+        update: isAdminField,
+      },
       defaultValue: 0,
       admin: { hidden: true },
     },
   ],
 
   hooks: {
+    beforeLogin: [beforeLogin],
     beforeChange: [enforceFriendDefaults],
     afterChange: [notifyRegistration, sendVerificationEmail],
   },

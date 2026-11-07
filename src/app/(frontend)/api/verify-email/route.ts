@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
+import { AUTH_ERROR_MESSAGES } from '@/utilities/authMessages'
 import {
   generateVerificationCode,
   getVerificationExpiry,
@@ -37,6 +38,10 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
+    }
+
+    if (user.status === 'blocked') {
+      return NextResponse.json({ error: AUTH_ERROR_MESSAGES.blocked }, { status: 403 })
     }
 
     if (user.status === 'active') {

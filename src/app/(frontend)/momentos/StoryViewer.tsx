@@ -20,6 +20,8 @@ export interface ViewerStory {
 
 interface StoryViewerProps {
   stories: ViewerStory[]
+  /** Pause the auto-advance timer (e.g. while the login CTA is open). Manual taps still work. */
+  paused?: boolean
 }
 
 interface StoryMetrics {
@@ -32,7 +34,7 @@ interface StoryMetrics {
 const TIMER_DURATION = 4000
 const VIEW_THRESHOLD = 2000
 
-export function StoryViewer({ stories }: StoryViewerProps) {
+export function StoryViewer({ stories, paused = false }: StoryViewerProps) {
   const router = useRouter()
   const [currentIndex, setCurrentIndex] = useState<number>(0)
   const [isPaused, setIsPaused] = useState<boolean>(false)
@@ -53,6 +55,13 @@ export function StoryViewer({ stories }: StoryViewerProps) {
   const viewedSetRef = useRef<Set<number>>(new Set())
   const storyVisibleStartRef = useRef<number>(Date.now())
   const telemetrySentRef = useRef<boolean>(false)
+
+  // Pause state, readable inside callbacks without recreating them
+  const pausedRef = useRef(paused)
+
+  useEffect(() => {
+    pausedRef.current = paused
+  }, [paused])
 
   // Initialize metrics for all stories
   useEffect(() => {
@@ -203,6 +212,13 @@ export function StoryViewer({ stories }: StoryViewerProps) {
     (remaining: number) => {
       if (timerRef.current) {
         clearTimeout(timerRef.current)
+        timerRef.current = null
+      }
+      if (pausedRef.current) {
+        // Stay paused: remember how much of the story is left
+        elapsedRef.current = Math.max(TIMER_DURATION - remaining, 0)
+        setIsPaused(true)
+        return
       }
       startTimeRef.current = Date.now()
       timerRef.current = setTimeout(() => {
@@ -215,9 +231,26 @@ export function StoryViewer({ stories }: StoryViewerProps) {
 
   const resetTimer = useCallback(() => {
     elapsedRef.current = 0
-    setIsPaused(false)
+    setIsPaused(pausedRef.current)
     startTimer(TIMER_DURATION)
   }, [startTimer])
+
+  // Pause/resume auto-advance when the `paused` prop changes
+  useEffect(() => {
+    if (paused) {
+      if (timerRef.current) {
+        elapsedRef.current = Date.now() - startTimeRef.current + elapsedRef.current
+        clearTimeout(timerRef.current)
+        timerRef.current = null
+      }
+      setIsPaused(true)
+    } else {
+      const remaining = TIMER_DURATION - elapsedRef.current
+      setIsPaused(false)
+      startTimer(Math.max(remaining, 0))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paused])
 
   // Tap right: advance (may be skip)
   const handleTapRight = useCallback(() => {
@@ -259,8 +292,8 @@ export function StoryViewer({ stories }: StoryViewerProps) {
       if (timerRef.current) {
         clearTimeout(timerRef.current)
         timerRef.current = null
+        elapsedRef.current = Date.now() - startTimeRef.current + elapsedRef.current
       }
-      elapsedRef.current = Date.now() - startTimeRef.current + elapsedRef.current
       setIsPaused(true)
 
       // Pause view timer
@@ -280,9 +313,9 @@ export function StoryViewer({ stories }: StoryViewerProps) {
 
       sendTelemetry()
     } else {
-      // Resume
+      // Resume, unless the login gate is still keeping the viewer paused
       const remaining = TIMER_DURATION - elapsedRef.current
-      setIsPaused(false)
+      setIsPaused(pausedRef.current)
       startTimer(Math.max(remaining, 0))
 
       // Reset telemetry sent flag so next hidden event can send again

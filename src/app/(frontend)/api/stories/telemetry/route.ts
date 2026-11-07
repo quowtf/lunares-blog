@@ -27,7 +27,10 @@ export async function POST(req: Request): Promise<Response> {
 
     const payload = await getPayload({ config })
 
-    // Fetch current values for all story IDs in a single query
+    // Only touch stories the caller is allowed to read: private/expired
+    // stories are filtered out for anonymous or unauthorized visitors.
+    const { user } = await payload.auth({ headers: req.headers })
+
     const storyIds = metrics.map((m) => m.id)
     const existing = await payload.find({
       collection: 'stories',
@@ -36,7 +39,8 @@ export async function POST(req: Request): Promise<Response> {
       },
       limit: storyIds.length,
       depth: 0,
-      overrideAccess: true,
+      overrideAccess: false,
+      user,
     })
 
     const existingMap = new Map(existing.docs.map((doc) => [doc.id, doc]))

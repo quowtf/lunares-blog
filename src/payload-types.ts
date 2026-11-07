@@ -70,6 +70,7 @@ export interface Config {
     pages: Page;
     posts: Post;
     media: Media;
+    'private-media': PrivateMedia;
     categories: Category;
     'badge-tags': BadgeTag;
     users: User;
@@ -95,6 +96,7 @@ export interface Config {
     pages: PagesSelect<false> | PagesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    'private-media': PrivateMediaSelect<false> | PrivateMediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     'badge-tags': BadgeTagsSelect<false> | BadgeTagsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
@@ -810,6 +812,43 @@ export interface Form {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "private-media".
+ */
+export interface PrivateMedia {
+  id: number;
+  alt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    medium?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "comments".
  */
 export interface Comment {
@@ -826,9 +865,19 @@ export interface Comment {
  */
 export interface Story {
   id: number;
+  /**
+   * Imagen para historias públicas.
+   */
   image?: (number | null) | Media;
+  /**
+   * Imagen para historias privadas. Solo la ven el admin y los amigos activos.
+   */
+  privateImage?: (number | null) | PrivateMedia;
   caption?: string | null;
   author: number | User;
+  /**
+   * Las historias privadas expiran siempre a las 6 horas y solo las ven el admin y los amigos activos.
+   */
   visibility?: ('public' | 'private') | null;
   duration?: ('12' | '24' | '48' | '72') | null;
   /**
@@ -848,6 +897,9 @@ export interface Story {
         } | null);
     url?: string | null;
   };
+  /**
+   * Las historias privadas expiran siempre a las 6 horas.
+   */
   expiresAt?: string | null;
   views?: number | null;
   taps?: number | null;
@@ -1060,6 +1112,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'private-media';
+        value: number | PrivateMedia;
       } | null)
     | ({
         relationTo: 'categories';
@@ -1367,6 +1423,48 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "private-media_select".
+ */
+export interface PrivateMediaSelect<T extends boolean = true> {
+  alt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        medium?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "categories_select".
  */
 export interface CategoriesSelect<T extends boolean = true> {
@@ -1440,6 +1538,7 @@ export interface CommentsSelect<T extends boolean = true> {
  */
 export interface StoriesSelect<T extends boolean = true> {
   image?: T;
+  privateImage?: T;
   caption?: T;
   author?: T;
   visibility?: T;
