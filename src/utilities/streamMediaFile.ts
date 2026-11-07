@@ -4,6 +4,7 @@ import { getBlobReadWriteToken, getBlobStoreAccess } from './blobStorage'
 
 export type StreamableMedia = {
   url?: string | null
+  filename?: string | null
   mimeType?: string | null
 }
 
@@ -17,10 +18,10 @@ export type StreamedMedia = {
  * Streams the bytes of a media doc without redirecting to the storage URL.
  *
  * Private Vercel Blob stores reject unauthenticated reads (the plain URL
- * returns 204), so blob-host URLs go through the SDK `get()` with the store
- * token — same approach as `vercelPrivateBlobFileHandler`. Relative URLs are
- * fetched through Payload's own file route using the incoming request origin
- * (works in dev and prod, no hardcoded server URL).
+ * returns 204), so private files go through the SDK `get()` with the store
+ * token — same approach as `vercelPrivateBlobFileHandler`. This includes
+ * relative URLs like `/api/private-media/file/foo.jpg`, whose route requires
+ * an authenticated session and would fail on a server-side fetch.
  *
  * Returns null when the file cannot be read (treat as 404).
  */
@@ -40,25 +41,34 @@ export async function streamMediaFile(
     // Private stores reject unauthenticated reads on the blob URL itself, so
     // those go through the SDK `get()` with the store token — same approach
     // as `vercelPrivateBlobFileHandler`.
-    if (getBlobStoreAccess() === 'private' && isBlobUrl) {
+    if (getBlobStoreAccess() === 'private') {
       const token = getBlobReadWriteToken()
       if (!token) return null
 
       // Blob keys are not URL-encoded. Decode the pathname so filenames with
       // spaces or special characters resolve correctly.
-      const fileKey = decodeURIComponent(parsed.pathname.replace(/^\//, ''))
-      const result = await get(fileKey, { access: 'private', token })
-      if (!result?.stream) return null
+      const fileMarkerIndex = parsed.pathname.indexOf('/file/')
+      const fileKey = isBlobUrl
+        ? decodeURIComponent(parsed.pathname.replace(/^\//, ''))
+        : fileMarkerIndex >= 0
+          ? decodeURIComponent(parsed.pathname.slice(fileMarkerIndex + '/file/'.length))
+          : media.filename
+            ? decodeURIComponent(media.filename)
+            : null
 
-      return {
-        body: result.stream,
-        contentType: result.blob.contentType,
-        contentDisposition: result.blob.contentDisposition,
+      if (fileKey) {
+        const result = await get(fileKey, { access: 'private', token })
+        if (!result?.stream) return null
+
+        return {
+          body: result.stream,
+          contentType: result.blob.contentType,
+          contentDisposition: result.blob.contentDisposition,
+        }
       }
     }
 
-    // Public stores, or private stores served through Payload's file route
-    // (`/api/media/file/...`), which already authenticates the blob read.
+    // Public stores.
     const response = await fetch(absolute)
     if (!response.ok || !response.body) return null
 
