@@ -1,11 +1,17 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
+import type { Media, Post } from '@/payload-types'
+
 import { getServerSideURL } from '@/utilities/getURL'
 import { checkPublishAuth } from '@/utilities/publish/auth'
+import { createGalleryPost } from '@/utilities/publish/createGalleryPost'
 import { createTextPost } from '@/utilities/publish/createTextPost'
 import { parsePublicationDate } from '@/utilities/publish/date'
-import { normalizePostType } from '@/utilities/publish/validation'
+import { processImageFile } from '@/utilities/publish/images'
+import { normalizePostType, type PublishPostType } from '@/utilities/publish/validation'
+
+const MAX_GALLERY_IMAGES = 3
 
 function errorResponse(message: string, status: number): Response {
   return Response.json({ success: false, error: message }, { status })
@@ -15,13 +21,63 @@ function readString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
-export async function POST(req: Request): Promise<Response> {
-  const auth = checkPublishAuth(req)
-
-  if (!auth.ok) {
-    return errorResponse(auth.error, auth.status)
+function firstValue(data: Record<string, unknown>, names: string[]): unknown {
+  for (const name of names) {
+    if (data[name] !== undefined) return data[name]
   }
 
+  return undefined
+}
+
+function readFormString(formData: FormData, names: string[]): string {
+  for (const name of names) {
+    const value = formData.get(name)
+    if (typeof value === 'string') return value.trim()
+  }
+
+  return ''
+}
+
+function getImageFiles(formData: FormData): File[] {
+  const fieldNames = ['images', 'image', 'files', 'image1', 'image2', 'image3']
+  const entries = fieldNames.flatMap((name) => formData.getAll(name))
+
+  return entries.filter((value): value is File => value instanceof File && value.size > 0)
+}
+
+function isDryRun(req: Request): boolean {
+  return new URL(req.url).searchParams.get('dryRun') === '1'
+}
+
+function toMediaId(media: number | Media): number {
+  return typeof media === 'number' ? media : media.id
+}
+
+function successResponse({
+  post,
+  type,
+  dateFallback,
+  extra,
+}: {
+  post: Post
+  type: PublishPostType
+  dateFallback: boolean
+  extra?: Record<string, unknown>
+}): Response {
+  return Response.json({
+    success: true,
+    type,
+    id: post.id,
+    slug: post.slug,
+    publishedAt: post.publishedAt,
+    dateFallback,
+    url: null,
+    adminUrl: `${getServerSideURL()}/admin/collections/posts/${post.id}`,
+    ...extra,
+  })
+}
+
+async function handleJson(req: Request): Promise<Response> {
   let body: unknown
 
   try {
@@ -35,10 +91,15 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   const data = body as Record<string, unknown>
-  const postType = normalizePostType(data.post ?? data['tipo-de-post'] ?? data.type)
+  const rawPost = firstValue(data, ['post', 'tipo-de-post', 'type'])
+  const postType = normalizePostType(rawPost)
 
   if (!postType) {
     return errorResponse('Invalid post type. Use "t" or "q".', 400)
+  }
+
+  if (postType === 'gallery') {
+    return errorResponse('Gallery requires multipart/form-data with 1-3 images', 400)
   }
 
   const title = readString(data.title)
@@ -51,9 +112,28 @@ export async function POST(req: Request): Promise<Response> {
     return errorResponse('Missing content', 400)
   }
 
-  const { publishedAt, dateFallback } = parsePublicationDate(
-    data.date ?? data['fecha-de-publicacion'] ?? data.publishedAt,
-  )
+  const rawDate = firstValue(data, ['date', 'fecha-de-publicacion', 'publishedAt'])
+  const { publishedAt, dateFallback } = parsePublicationDate(rawDate)
+
+  if (isDryRun(req)) {
+    return Response.json({
+      success: true,
+      dryRun: true,
+      received: {
+        post: rawPost ?? null,
+        title: data.title ?? null,
+        content: data.content ?? null,
+        date: rawDate ?? null,
+      },
+      normalized: {
+        type: postType,
+        title,
+        content,
+        publishedAt,
+        dateFallback,
+      },
+    })
+  }
 
   try {
     const payload = await getPayload({ config })
@@ -65,16 +145,7 @@ export async function POST(req: Request): Promise<Response> {
       publishedAt,
     })
 
-    return Response.json({
-      success: true,
-      type: postType,
-      id: post.id,
-      slug: post.slug,
-      publishedAt: post.publishedAt,
-      dateFallback,
-      url: null,
-      adminUrl: `${getServerSideURL()}/admin/collections/posts/${post.id}`,
-    })
+    return successResponse({ post, type: postType, dateFallback })
   } catch (error) {
     const err = error as Error
 
@@ -86,4 +157,108 @@ export async function POST(req: Request): Promise<Response> {
 
     return errorResponse(err.message, 500)
   }
+}
+
+async function handleMultipart(req: Request): Promise<Response> {
+  let formData: FormData
+
+  try {
+    formData = await req.formData()
+  } catch {
+    return errorResponse('Invalid form data', 400)
+  }
+
+  const rawPost = readFormString(formData, ['post', 'tipo-de-post', 'type'])
+  const postType = normalizePostType(rawPost)
+
+  if (postType !== 'gallery') {
+    return errorResponse('Multipart is only supported for gallery posts. Use "g".', 400)
+  }
+
+  const files = getImageFiles(formData)
+
+  if (files.length === 0) {
+    return errorResponse('Missing images', 400)
+  }
+
+  if (files.length > MAX_GALLERY_IMAGES) {
+    return errorResponse('Maximum 3 images allowed', 400)
+  }
+
+  const rawDate = readFormString(formData, ['date', 'fecha-de-publicacion', 'publishedAt'])
+  const { publishedAt, dateFallback } = parsePublicationDate(rawDate)
+
+  if (isDryRun(req)) {
+    return Response.json({
+      success: true,
+      dryRun: true,
+      received: {
+        post: rawPost || null,
+        date: rawDate || null,
+        images: files.map((file) => ({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+        })),
+      },
+      normalized: {
+        type: postType,
+        publishedAt,
+        dateFallback,
+        imageCount: files.length,
+      },
+    })
+  }
+
+  let images
+
+  try {
+    images = await Promise.all(files.map((file) => processImageFile(file)))
+  } catch (error) {
+    return errorResponse(`Invalid image: ${(error as Error).message}`, 400)
+  }
+
+  try {
+    const payload = await getPayload({ config })
+    const post = await createGalleryPost({
+      payload,
+      images,
+      publishedAt,
+    })
+
+    return successResponse({
+      post,
+      type: 'gallery',
+      dateFallback,
+      extra: {
+        images: post.galleryImages?.map(toMediaId) ?? [],
+      },
+    })
+  } catch (error) {
+    const err = error as Error
+
+    console.error({
+      err,
+      message: 'Error creating gallery post',
+      stack: err.stack,
+    })
+
+    return errorResponse(err.message, 500)
+  }
+}
+
+export async function POST(req: Request): Promise<Response> {
+  const auth = checkPublishAuth(req)
+
+  if (!auth.ok) {
+    return errorResponse(auth.error, auth.status)
+  }
+
+  const contentType = req.headers.get('content-type') ?? ''
+
+  if (contentType.includes('multipart/form-data')) {
+    return handleMultipart(req)
+  }
+
+  return handleJson(req)
 }
