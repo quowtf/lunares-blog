@@ -12,6 +12,22 @@ import { processImageFile } from '@/utilities/publish/images'
 import { normalizePostType, type PublishPostType } from '@/utilities/publish/validation'
 
 const MAX_GALLERY_IMAGES = 3
+const GALLERY_IMAGE_FIELDS = [
+  'images1',
+  'images2',
+  'images3',
+  'image1',
+  'image2',
+  'image3',
+  'images',
+  'image',
+  'files',
+]
+
+type UploadedImageField = {
+  field: string
+  file: File
+}
 
 function errorResponse(message: string, status: number): Response {
   return Response.json({ success: false, error: message }, { status })
@@ -38,11 +54,17 @@ function readFormString(formData: FormData, names: string[]): string {
   return ''
 }
 
-function getImageFiles(formData: FormData): File[] {
-  const fieldNames = ['images', 'image', 'files', 'image1', 'image2', 'image3']
-  const entries = fieldNames.flatMap((name) => formData.getAll(name))
+function isFile(value: FormDataEntryValue): value is File {
+  return value instanceof File && value.size > 0
+}
 
-  return entries.filter((value): value is File => value instanceof File && value.size > 0)
+function getImageFiles(formData: FormData): UploadedImageField[] {
+  return GALLERY_IMAGE_FIELDS.flatMap((field) =>
+    formData
+      .getAll(field)
+      .filter(isFile)
+      .map((file) => ({ field, file })),
+  )
 }
 
 function isDryRun(req: Request): boolean {
@@ -175,15 +197,25 @@ async function handleMultipart(req: Request): Promise<Response> {
     return errorResponse('Multipart is only supported for gallery posts. Use "g".', 400)
   }
 
-  const files = getImageFiles(formData)
+  const uploads = getImageFiles(formData)
 
-  if (files.length === 0) {
+  if (uploads.length === 0) {
     return errorResponse('Missing images', 400)
   }
 
-  if (files.length > MAX_GALLERY_IMAGES) {
+  if (uploads.length > MAX_GALLERY_IMAGES) {
     return errorResponse('Maximum 3 images allowed', 400)
   }
+
+  console.info('[publish] gallery upload', {
+    fields: Array.from(formData.keys()),
+    images: uploads.map(({ field, file }) => ({
+      field,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    })),
+  })
 
   const rawDate = readFormString(formData, ['date', 'fecha-de-publicacion', 'publishedAt'])
   const { publishedAt, dateFallback } = parsePublicationDate(rawDate)
@@ -195,7 +227,9 @@ async function handleMultipart(req: Request): Promise<Response> {
       received: {
         post: rawPost || null,
         date: rawDate || null,
-        images: files.map((file) => ({
+        fields: Array.from(formData.keys()),
+        images: uploads.map(({ field, file }) => ({
+          field,
           name: file.name,
           size: file.size,
           type: file.type,
@@ -205,7 +239,7 @@ async function handleMultipart(req: Request): Promise<Response> {
         type: postType,
         publishedAt,
         dateFallback,
-        imageCount: files.length,
+        imageCount: uploads.length,
       },
     })
   }
@@ -213,7 +247,7 @@ async function handleMultipart(req: Request): Promise<Response> {
   let images
 
   try {
-    images = await Promise.all(files.map((file) => processImageFile(file)))
+    images = await Promise.all(uploads.map(({ file }) => processImageFile(file)))
   } catch (error) {
     return errorResponse(`Invalid image: ${(error as Error).message}`, 400)
   }
