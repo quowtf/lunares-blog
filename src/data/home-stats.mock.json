@@ -1,0 +1,73 @@
+{
+  "cards": [
+    {
+      "id": "distancia",
+      "title": "Kilómetros rodados",
+      "icon": "bike",
+      "value": 312,
+      "unit": "km",
+      "delta": 12,
+      "tone": "sage",
+      "featured": true,
+      "chart": {
+        "type": "ridgeline",
+        "current": [22, 41, 18, 55, 35, 48, 62, 44, 70],
+        "previous": [30, 25, 38, 32, 46, 41, 54, 50, 62, 57, 74, 80]
+      }
+    },
+    {
+      "id": "cafe",
+      "title": "Gramos de café molidos",
+      "icon": "coffee",
+      "value": 1240,
+      "unit": "g",
+      "delta": 8,
+      "tone": "clay",
+      "chart": {
+        "type": "line",
+        "current": [120, 90, 160, 140, 210, 180, 230, 200, 260],
+        "previous": [150, 130, 120, 170, 160, 190, 180, 220, 210, 250, 240, 280]
+      }
+    },
+    {
+      "id": "boulder",
+      "title": "Intentos de boulder",
+      "icon": "boulder",
+      "value": 186,
+      "delta": 14,
+      "tone": "slate",
+      "details": [
+        { "value": 64, "label": "tops" },
+        { "value": 122, "label": "fallidos" }
+      ],
+      "chart": {
+        "type": "bars",
+        "current": {
+          "completed": [18, 22, 24],
+          "failed": [38, 44, 40]
+        },
+        "previous": [45, 40, 38, 52, 44]
+      }
+    },
+    {
+      "id": "commits",
+      "title": "Frecuencia de código publicado",
+      "icon": "git",
+      "value": 84,
+      "delta": 18,
+      "tone": "gold",
+      "details": [
+        { "value": 5.6, "label": "promedio/día" },
+        { "value": 15, "label": "días activos" }
+      ],
+      "chart": {
+        "type": "calendar",
+        "current": [4, 7, 5, 0, 8, 9, 3, 6, 2, 0, 10, 7, 5, 9, 9],
+        "previous": [
+          3, 5, 0, 2, 6, 4, 1, 0, 0, 7, 3, 5, 2, 8, 4, 0, 6, 3, 1, 0, 9, 4, 2, 5, 7, 0, 3, 6, 1, 4,
+          2
+        ]
+      }
+    }
+  ]
+}

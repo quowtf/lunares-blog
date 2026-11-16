@@ -5,6 +5,7 @@ import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 
 import { BadgeTags } from './collections/BadgeTags'
+import { Activities } from './collections/Activities'
 import { Categories } from './collections/Categories'
 import { Comments } from './collections/Comments'
 import { Media } from './collections/Media'
@@ -98,6 +99,7 @@ export default buildConfig({
     Users,
     Comments,
     Stories,
+    Activities,
   ],
   cors: [getServerSideURL()].filter(Boolean),
   globals: [Header, Footer],
