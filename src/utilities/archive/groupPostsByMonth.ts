@@ -1,3 +1,5 @@
+import { ARCHIVE_TIME_ZONE } from './archiveWindow'
+
 const MONTH_LABELS = [
   'Enero',
   'Febrero',
@@ -24,16 +26,30 @@ type DatedPost = {
   createdAt: string
 }
 
+const monthPartsFormatter = new Intl.DateTimeFormat('en-US', {
+  month: '2-digit',
+  timeZone: ARCHIVE_TIME_ZONE,
+  year: 'numeric',
+})
+
 function getPostDate(post: DatedPost): Date {
   return new Date(post.publishedAt ?? post.createdAt)
 }
 
 export function formatMonthYear(date: Date): string {
-  return `${MONTH_LABELS[date.getMonth()]} ${date.getFullYear()}`
+  const parts = monthPartsFormatter.formatToParts(date)
+  const values = new Map(parts.map((part) => [part.type, part.value]))
+  const month = Number(values.get('month'))
+  const year = values.get('year')
+
+  return `${MONTH_LABELS[month - 1] ?? ''} ${year ?? ''}`.trim()
 }
 
 function getMonthKey(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+  const parts = monthPartsFormatter.formatToParts(date)
+  const values = new Map(parts.map((part) => [part.type, part.value]))
+
+  return `${values.get('year')}-${values.get('month')}`
 }
 
 export function groupPostsByMonth<T extends DatedPost>(posts: T[]): ArchiveMonthGroup<T>[] {

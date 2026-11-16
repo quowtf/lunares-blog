@@ -1,5 +1,4 @@
-import configPromise from '@payload-config'
-import { getPayload } from 'payload'
+import { getPayloadRequest } from '@/utilities/getPayloadRequest'
 
 type AdjacentPost = {
   slug: string
@@ -10,7 +9,7 @@ export async function getAdjacentPosts(currentSlug: string): Promise<{
   prev: AdjacentPost | null
   next: AdjacentPost | null
 }> {
-  const payload = await getPayload({ config: configPromise })
+  const { payload, req } = await getPayloadRequest()
 
   const result = await payload.find({
     collection: 'posts',
@@ -18,7 +17,8 @@ export async function getAdjacentPosts(currentSlug: string): Promise<{
     limit: 1000,
     overrideAccess: false,
     pagination: false,
-    sort: '-publishedAt',
+    req,
+    sort: ['-publishedAt', '-id'],
     select: {
       slug: true,
       title: true,
