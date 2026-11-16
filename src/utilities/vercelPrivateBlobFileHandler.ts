@@ -2,6 +2,8 @@ import { getFileKey, getFilePrefix as getDocPrefix } from '@payloadcms/plugin-cl
 import { BlobNotFoundError, get } from '@vercel/blob'
 import { headersWithCors, type CollectionConfig, type PayloadRequest, type TypeWithID } from 'payload'
 
+import type { Media } from '@/payload-types'
+import { isMediaPublicNow } from './archive/mediaVisibility'
 import { getBlobReadWriteToken, getBlobStoreAccess } from './blobStorage'
 
 type HandlerArgs = {
@@ -76,7 +78,22 @@ async function streamPrivateBlob(
     }
 
     const responseHeaders = new Headers(args.headers)
-    responseHeaders.set('Cache-Control', `public, max-age=${60 * 60 * 24 * 365}`)
+    const isPrivateCollection = collectionConfig.slug === 'private-media'
+    const mediaDoc = args.doc as Media | undefined
+    const publicNow =
+      !isPrivateCollection && mediaDoc ? isMediaPublicNow(mediaDoc) : false
+
+    responseHeaders.set(
+      'Cache-Control',
+      publicNow ? 'public, max-age=60, s-maxage=60' : 'private, no-store, max-age=0',
+    )
+
+    if (!publicNow) {
+      responseHeaders.set('CDN-Cache-Control', 'no-store')
+      responseHeaders.set('Vercel-CDN-Cache-Control', 'no-store')
+    }
+
+    responseHeaders.set('X-Content-Type-Options', 'nosniff')
     responseHeaders.set('Content-Type', blobResult.blob.contentType)
     responseHeaders.set('Content-Disposition', blobResult.blob.contentDisposition)
 

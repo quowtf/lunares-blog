@@ -61,16 +61,50 @@ export const cleanupExpiredStories: TaskHandler<{
     errors.push(msg)
   }
 
-  // Delete media (bulk) - blob is deleted automatically by vercelBlobStorage plugin
-  if (mediaIds.length > 0) {
+  // Drop the story rows from the media reference index before deciding which
+  // files can be deleted. A story image may also be used by a post or page.
+  if (storyIds.length > 0) {
     try {
       await payload.delete({
-        collection: 'media',
+        collection: 'media-references',
         where: {
-          id: { in: mediaIds },
+          and: [
+            { sourceCollection: { equals: 'stories' } },
+            { sourceId: { in: storyIds.map(String) } },
+          ],
         },
         overrideAccess: true,
       })
+    } catch (err) {
+      const msg = `Failed to delete story media references: ${err}`
+      logger.error({ err, msg: '[Cleanup] ' + msg })
+      errors.push(msg)
+    }
+  }
+
+  // Delete media only when no other document still references it.
+  if (mediaIds.length > 0) {
+    try {
+      const remaining = await payload.find({
+        collection: 'media-references',
+        where: { media: { in: mediaIds } },
+        limit: 0,
+        depth: 0,
+        overrideAccess: true,
+      })
+
+      const stillUsed = new Set(remaining.docs.map((reference) => Number(reference.media)))
+      const deletableMediaIds = mediaIds.filter((id) => !stillUsed.has(Number(id)))
+
+      if (deletableMediaIds.length > 0) {
+        await payload.delete({
+          collection: 'media',
+          where: {
+            id: { in: deletableMediaIds },
+          },
+          overrideAccess: true,
+        })
+      }
     } catch (err) {
       const msg = `Failed to delete media: ${err}`
       logger.error({ err, msg: '[Cleanup] ' + msg })

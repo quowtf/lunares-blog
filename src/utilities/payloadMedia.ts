@@ -1,4 +1,6 @@
-import type { Media } from '@/payload-types'
+import type { Media, PrivateMedia } from '@/payload-types'
+import { isMediaPublicNow } from '@/utilities/archive/mediaVisibility'
+import { isPrivateMediaDoc, type MediaDoc } from '@/utilities/media/mediaValue'
 
 const SIZE_PRIORITY = ['medium', 'thumbnail'] as const
 
@@ -29,7 +31,7 @@ export function isNonOptimizableImage(url: string, mimeType?: string | null): bo
  * when the source file (e.g. HEIC from iPhone) cannot be processed by next/image.
  */
 export function getPreferredMediaFile(
-  media: Media,
+  media: Media | PrivateMedia,
 ): { url: string; mimeType?: string | null } | null {
   const originalUrl = media.url
   if (!originalUrl) return null
@@ -58,4 +60,14 @@ export function shouldUseUnoptimizedImage(src: string, mimeType?: string | null)
   if (isNonOptimizableImage(src, mimeType)) return true
 
   return false
+}
+
+/**
+ * next/image fetches server-side without the visitor's cookies. Private media
+ * (and media outside the public window) must bypass the optimizer so the
+ * browser sends the session cookie directly to the Payload file route.
+ */
+export function isMediaRestrictedForImage(media: MediaDoc, now = new Date()): boolean {
+  if (isPrivateMediaDoc(media)) return true
+  return !isMediaPublicNow(media, now)
 }

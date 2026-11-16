@@ -8,10 +8,12 @@ import { BadgeTags } from './collections/BadgeTags'
 import { Categories } from './collections/Categories'
 import { Comments } from './collections/Comments'
 import { Media } from './collections/Media'
+import { MediaReferences } from './collections/MediaReferences'
 import { Pages } from './collections/Pages'
 import { PrivateMedia } from './collections/PrivateMedia'
 import { Posts } from './collections/Posts'
 import { Stories } from './collections/Stories'
+import { syncArchivedPostMedia } from './collections/Posts/tasks/syncArchivedPostMedia'
 import { cleanupExpiredStories } from './collections/Stories/tasks/cleanupExpiredStories'
 import { Users } from './collections/Users'
 import { Footer } from './Footer/config'
@@ -90,6 +92,7 @@ export default buildConfig({
     Posts,
     Media,
     PrivateMedia,
+    MediaReferences,
     Categories,
     BadgeTags,
     Users,
@@ -124,6 +127,10 @@ export default buildConfig({
       {
         slug: 'cleanup-expired-stories',
         handler: cleanupExpiredStories,
+      },
+      {
+        slug: 'sync-archived-post-media',
+        handler: syncArchivedPostMedia,
       },
     ],
   },

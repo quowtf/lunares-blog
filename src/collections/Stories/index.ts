@@ -7,6 +7,9 @@ import { computeExpiresAt } from './hooks/computeExpiresAt'
 import { enforcePrivateStoryImage } from './hooks/enforcePrivateStoryImage'
 import { setAuthorFromUser } from './hooks/setAuthorFromUser'
 import { filterActiveStories } from './hooks/filterActiveStories'
+import { createMediaReferenceHooks } from '@/utilities/archive/media/syncMediaReferences'
+
+const mediaReferenceHooks = createMediaReferenceHooks('stories')
 
 export const Stories: CollectionConfig = {
   slug: 'stories',
@@ -22,6 +25,8 @@ export const Stories: CollectionConfig = {
   },
   hooks: {
     beforeChange: [setAuthorFromUser, enforcePrivateStoryImage, computeExpiresAt],
+    afterChange: [mediaReferenceHooks.afterChange],
+    afterDelete: [mediaReferenceHooks.afterDelete],
     beforeOperation: [filterActiveStories],
   },
   fields: [

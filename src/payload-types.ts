@@ -71,11 +71,13 @@ export interface Config {
     posts: Post;
     media: Media;
     'private-media': PrivateMedia;
+    'media-references': MediaReference;
     categories: Category;
     'badge-tags': BadgeTag;
     users: User;
     comments: Comment;
     stories: Story;
+    activities: Activity;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -97,11 +99,13 @@ export interface Config {
     posts: PostsSelect<false> | PostsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     'private-media': PrivateMediaSelect<false> | PrivateMediaSelect<true>;
+    'media-references': MediaReferencesSelect<false> | MediaReferencesSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     'badge-tags': BadgeTagsSelect<false> | BadgeTagsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     comments: CommentsSelect<false> | CommentsSelect<true>;
     stories: StoriesSelect<false> | StoriesSelect<true>;
+    activities: ActivitiesSelect<false> | ActivitiesSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -133,6 +137,7 @@ export interface Config {
   jobs: {
     tasks: {
       'cleanup-expired-stories': TaskCleanupExpiredStories;
+      'sync-archived-post-media': TaskSyncArchivedPostMedia;
       schedulePublish: TaskSchedulePublish;
       inline: {
         input: unknown;
@@ -237,6 +242,7 @@ export interface Post {
   id: number;
   title?: string | null;
   heroImage?: (number | null) | Media;
+  privateHeroImage?: (number | null) | PrivateMedia;
   content?: {
     root: {
       type: string;
@@ -269,6 +275,7 @@ export interface Post {
    * Gallery: solo imágenes. Slides: imágenes con título y descripción. Hasta 3.
    */
   galleryImages?: (number | Media)[] | null;
+  privateGalleryImages?: (number | PrivateMedia)[] | null;
   /**
    * País o región de origen
    */
@@ -305,6 +312,7 @@ export interface Post {
    * Tags/galardones del café
    */
   coffeeTags?: (number | BadgeTag)[] | null;
+  mediaArchiveState?: ('none' | 'pending' | 'archived' | 'needs-promotion') | null;
   publishedAt?: string | null;
   authors?: (number | User)[] | null;
   populatedAuthors?:
@@ -344,6 +352,14 @@ export interface Media {
     };
     [k: string]: unknown;
   } | null;
+  /**
+   * Assets estáticos que nunca deben pasar al gate de posts. No se copian a private-media.
+   */
+  alwaysPublic?: boolean | null;
+  visibility?: ('public' | 'post-window' | 'private') | null;
+  latestPostPublishedAt?: string | null;
+  publicUntil?: string | null;
+  archiveRetentionUntil?: string | null;
   folder?: (number | null) | FolderInterface;
   updatedAt: string;
   createdAt: string;
@@ -400,6 +416,60 @@ export interface FolderInterface {
   folderType?: 'media'[] | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "private-media".
+ */
+export interface PrivateMedia {
+  id: number;
+  alt?: string | null;
+  caption?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  archiveSourceId?: number | null;
+  archiveSourceUpdatedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    medium?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -570,7 +640,8 @@ export interface ContentBlock {
  * via the `definition` "MediaBlock".
  */
 export interface MediaBlock {
-  media: number | Media;
+  media?: (number | null) | Media;
+  privateMedia?: (number | null) | PrivateMedia;
   size?: ('full' | 'wide' | 'medium' | 'small') | null;
   id?: string | null;
   blockName?: string | null;
@@ -812,40 +883,19 @@ export interface Form {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "private-media".
+ * via the `definition` "media-references".
  */
-export interface PrivateMedia {
+export interface MediaReference {
   id: number;
-  alt?: string | null;
+  media: number | Media;
+  sourceCollection: 'posts' | 'pages' | 'stories';
+  sourceId: string;
+  fieldPath: string;
+  isPublic?: boolean | null;
+  publishedAt?: string | null;
+  expiresAt?: string | null;
   updatedAt: string;
   createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-  sizes?: {
-    thumbnail?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-    medium?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -908,6 +958,21 @@ export interface Story {
    */
   visible?: number | null;
   skips?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "activities".
+ */
+export interface Activity {
+  id: number;
+  type: 'bike' | 'coffee' | 'boulder' | 'code';
+  occurredAt: string;
+  day: string;
+  value?: number | null;
+  attempts?: number | null;
+  failed?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1054,7 +1119,7 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'cleanup-expired-stories' | 'schedulePublish';
+        taskSlug: 'inline' | 'cleanup-expired-stories' | 'sync-archived-post-media' | 'schedulePublish';
         taskID: string;
         input?:
           | {
@@ -1087,7 +1152,7 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'cleanup-expired-stories' | 'schedulePublish') | null;
+  taskSlug?: ('inline' | 'cleanup-expired-stories' | 'sync-archived-post-media' | 'schedulePublish') | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -1118,6 +1183,10 @@ export interface PayloadLockedDocument {
         value: number | PrivateMedia;
       } | null)
     | ({
+        relationTo: 'media-references';
+        value: number | MediaReference;
+      } | null)
+    | ({
         relationTo: 'categories';
         value: number | Category;
       } | null)
@@ -1136,6 +1205,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'stories';
         value: number | Story;
+      } | null)
+    | ({
+        relationTo: 'activities';
+        value: number | Activity;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1306,6 +1379,7 @@ export interface ContentBlockSelect<T extends boolean = true> {
  */
 export interface MediaBlockSelect<T extends boolean = true> {
   media?: T;
+  privateMedia?: T;
   size?: T;
   id?: T;
   blockName?: T;
@@ -1342,6 +1416,7 @@ export interface FormBlockSelect<T extends boolean = true> {
 export interface PostsSelect<T extends boolean = true> {
   title?: T;
   heroImage?: T;
+  privateHeroImage?: T;
   content?: T;
   relatedPosts?: T;
   categories?: T;
@@ -1354,6 +1429,7 @@ export interface PostsSelect<T extends boolean = true> {
       };
   PostType?: T;
   galleryImages?: T;
+  privateGalleryImages?: T;
   coffeeOrigin?: T;
   coffeeProcess?: T;
   coffeeRoast?: T;
@@ -1363,6 +1439,7 @@ export interface PostsSelect<T extends boolean = true> {
   coffeeTostador?: T;
   coffeeTienda?: T;
   coffeeTags?: T;
+  mediaArchiveState?: T;
   publishedAt?: T;
   authors?: T;
   populatedAuthors?:
@@ -1384,6 +1461,11 @@ export interface PostsSelect<T extends boolean = true> {
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
   caption?: T;
+  alwaysPublic?: T;
+  visibility?: T;
+  latestPostPublishedAt?: T;
+  publicUntil?: T;
+  archiveRetentionUntil?: T;
   folder?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1427,6 +1509,9 @@ export interface MediaSelect<T extends boolean = true> {
  */
 export interface PrivateMediaSelect<T extends boolean = true> {
   alt?: T;
+  caption?: T;
+  archiveSourceId?: T;
+  archiveSourceUpdatedAt?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -1462,6 +1547,21 @@ export interface PrivateMediaSelect<T extends boolean = true> {
               filename?: T;
             };
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media-references_select".
+ */
+export interface MediaReferencesSelect<T extends boolean = true> {
+  media?: T;
+  sourceCollection?: T;
+  sourceId?: T;
+  fieldPath?: T;
+  isPublic?: T;
+  publishedAt?: T;
+  expiresAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1556,6 +1656,20 @@ export interface StoriesSelect<T extends boolean = true> {
   taps?: T;
   visible?: T;
   skips?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "activities_select".
+ */
+export interface ActivitiesSelect<T extends boolean = true> {
+  type?: T;
+  occurredAt?: T;
+  day?: T;
+  value?: T;
+  attempts?: T;
+  failed?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1953,6 +2067,14 @@ export interface CollectionsWidget {
  * via the `definition` "TaskCleanup-expired-stories".
  */
 export interface TaskCleanupExpiredStories {
+  input?: unknown;
+  output?: unknown;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskSync-archived-post-media".
+ */
+export interface TaskSyncArchivedPostMedia {
   input?: unknown;
   output?: unknown;
 }

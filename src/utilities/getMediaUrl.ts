@@ -13,6 +13,16 @@ function stripTrailingSlash(value: string): string {
   return value.replace(/\/$/, '')
 }
 
+function isPrivateMediaUrl(url: string): boolean {
+  if (url.startsWith('/api/private-media/')) return true
+
+  try {
+    return new URL(url).pathname.startsWith('/api/private-media/')
+  } catch {
+    return false
+  }
+}
+
 function appendCacheTag(url: string, cacheTag?: string | null): string {
   if (!cacheTag || cacheTag === '') return url
 
@@ -32,6 +42,16 @@ export function getMediaBaseURL(): string {
 }
 
 function resolveMediaOrigin(url: string): string {
+  // Private media must stay same-origin so the session cookie is sent.
+  if (isPrivateMediaUrl(url)) {
+    try {
+      const parsed = new URL(url)
+      return `${parsed.pathname}${parsed.search}`
+    } catch {
+      return url
+    }
+  }
+
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
     return url
   }
@@ -63,7 +83,11 @@ export const getMediaUrl = (url: string | null | undefined, cacheTag?: string | 
 
   let resolved = resolveMediaOrigin(url.trim())
 
-  if (resolved.startsWith('/') && process.env.NEXT_PUBLIC_MEDIA_URL) {
+  if (
+    resolved.startsWith('/') &&
+    process.env.NEXT_PUBLIC_MEDIA_URL &&
+    !isPrivateMediaUrl(resolved)
+  ) {
     resolved = `${stripTrailingSlash(process.env.NEXT_PUBLIC_MEDIA_URL)}${resolved}`
   }
 

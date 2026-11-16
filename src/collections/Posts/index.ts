@@ -17,8 +17,10 @@ import { Code } from '../../blocks/Code/config'
 import { MediaBlock } from '../../blocks/MediaBlock/config'
 import { generatePreviewPath } from '../../utilities/generatePreviewPath'
 import { deleteRelatedComments } from './hooks/deleteRelatedComments'
+import { enforceMediaArchiveState } from './hooks/enforceMediaArchiveState'
 import { populateAuthors } from './hooks/populateAuthors'
 import { revalidateDelete, revalidatePost } from './hooks/revalidatePost'
+import { createMediaReferenceHooks } from '@/utilities/archive/media/syncMediaReferences'
 
 import {
   MetaDescriptionField,
@@ -29,12 +31,15 @@ import {
 } from '@payloadcms/plugin-seo/fields'
 import { slugField } from 'payload'
 
+const mediaReferenceHooks = createMediaReferenceHooks('posts')
+
 export const Posts: CollectionConfig<'posts'> = {
   slug: 'posts',
   access: {
     create: isAdmin,
     delete: isAdmin,
     read: isAdminOrPublished,
+    readVersions: isAdmin,
     update: isAdmin,
   },
   // This config controls what's populated by default when a post is referenced
@@ -44,6 +49,8 @@ export const Posts: CollectionConfig<'posts'> = {
     title: true,
     slug: true,
     categories: true,
+    heroImage: true,
+    privateHeroImage: true,
     meta: {
       image: true,
       description: true,
@@ -91,6 +98,16 @@ export const Posts: CollectionConfig<'posts'> = {
               relationTo: 'media',
             },
             {
+              // Populated by the archive task once the post leaves the public
+              // window. The public heroImage is cleared at the same time.
+              name: 'privateHeroImage',
+              type: 'upload',
+              relationTo: 'private-media',
+              admin: {
+                hidden: true,
+              },
+            },
+            {
               name: 'content',
               type: 'richText',
               editor: lexicalEditor({
@@ -102,7 +119,9 @@ export const Posts: CollectionConfig<'posts'> = {
                     FixedToolbarFeature(),
                     InlineToolbarFeature(),
                     HorizontalRuleFeature(),
-                    UploadFeature(),
+                    UploadFeature({
+                      enabledCollections: ['media', 'private-media'],
+                    }),
                   ]
                 },
               }),
@@ -253,6 +272,16 @@ export const Posts: CollectionConfig<'posts'> = {
           siblingData?.PostType === 'rodada',
       },
     },
+    {
+      // Private counterpart used after a post leaves the public window.
+      name: 'privateGalleryImages',
+      type: 'upload',
+      relationTo: 'private-media',
+      hasMany: true,
+      admin: {
+        hidden: true,
+      },
+    },
     // ── Café fields (visible only when PostType === 'cafe') ──────────────
     {
       name: 'coffeeOrigin',
@@ -346,6 +375,25 @@ export const Posts: CollectionConfig<'posts'> = {
     },
     // ── End café fields ──────────────────────────────────────────────────
     {
+      name: 'mediaArchiveState',
+      type: 'select',
+      defaultValue: 'none',
+      index: true,
+      options: [
+        { label: 'None', value: 'none' },
+        { label: 'Pending archive', value: 'pending' },
+        { label: 'Archived', value: 'archived' },
+        { label: 'Needs promotion', value: 'needs-promotion' },
+      ],
+      access: {
+        read: ({ req }) => req.user?.role === 'admin',
+      },
+      admin: {
+        hidden: true,
+        readOnly: true,
+      },
+    },
+    {
       name: 'publishedAt',
       type: 'date',
       admin: {
@@ -412,10 +460,11 @@ export const Posts: CollectionConfig<'posts'> = {
     slugField(),
   ],
   hooks: {
-    afterChange: [revalidatePost],
+    beforeChange: [enforceMediaArchiveState],
+    afterChange: [revalidatePost, mediaReferenceHooks.afterChange],
     afterRead: [populateAuthors],
     beforeDelete: [deleteRelatedComments],
-    afterDelete: [revalidateDelete],
+    afterDelete: [revalidateDelete, mediaReferenceHooks.afterDelete],
   },
   versions: {
     drafts: {

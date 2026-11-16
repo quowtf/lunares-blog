@@ -11,6 +11,7 @@ import { hero } from '@/heros/config'
 import { slugField } from 'payload'
 import { populatePublishedAt } from '../../hooks/populatePublishedAt'
 import { generatePreviewPath } from '../../utilities/generatePreviewPath'
+import { createMediaReferenceHooks } from '@/utilities/archive/media/syncMediaReferences'
 import { revalidateDelete, revalidatePage } from './hooks/revalidatePage'
 
 import {
@@ -20,6 +21,8 @@ import {
   OverviewField,
   PreviewField,
 } from '@payloadcms/plugin-seo/fields'
+
+const mediaReferenceHooks = createMediaReferenceHooks('pages')
 
 export const Pages: CollectionConfig<'pages'> = {
   slug: 'pages',
@@ -120,9 +123,9 @@ export const Pages: CollectionConfig<'pages'> = {
     slugField(),
   ],
   hooks: {
-    afterChange: [revalidatePage],
+    afterChange: [revalidatePage, mediaReferenceHooks.afterChange],
     beforeChange: [populatePublishedAt],
-    afterDelete: [revalidateDelete],
+    afterDelete: [revalidateDelete, mediaReferenceHooks.afterDelete],
   },
   versions: {
     drafts: {

@@ -2,6 +2,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 
 import type { Media } from '@/payload-types'
+import { isMediaPublicNow } from '@/utilities/archive/mediaVisibility'
 import { getPreferredMediaFile } from '@/utilities/payloadMedia'
 import { streamMediaFile } from '@/utilities/streamMediaFile'
 
@@ -48,6 +49,7 @@ export async function GET(
     if (!Number.isInteger(id) || id <= 0) return notFound()
 
     const payload = await getPayload({ config })
+    const { user } = await payload.auth({ headers: req.headers })
 
     let media: Media
     try {
@@ -56,6 +58,7 @@ export async function GET(
         id,
         depth: 0,
         overrideAccess: false,
+        user,
       })
     } catch {
       // Not found or read access denied
@@ -68,6 +71,11 @@ export async function GET(
     const file = resolveFile(media, size)
     if (!file?.url) return notFound()
 
+    const publicNow = isMediaPublicNow(media)
+    const cacheControl = publicNow
+      ? 'public, max-age=60, s-maxage=60, stale-while-revalidate=300'
+      : 'private, no-store, max-age=0'
+
     // Changes whenever the document (and therefore the file) is updated.
     const etag = `"media-${media.id}-${size}-${new Date(media.updatedAt).getTime()}"`
     const ifNoneMatch = req.headers.get('if-none-match')
@@ -77,7 +85,9 @@ export async function GET(
         status: 304,
         headers: {
           ETag: etag,
-          'Cache-Control': 'public, max-age=0, must-revalidate',
+          'Cache-Control': publicNow
+            ? 'public, max-age=0, must-revalidate'
+            : 'private, no-store, max-age=0',
         },
       })
     }
@@ -93,8 +103,13 @@ export async function GET(
     headers.set('Content-Type', streamed.contentType)
     headers.set('Content-Disposition', 'inline')
     headers.set('ETag', etag)
-    headers.set('Cache-Control', 'public, max-age=60, s-maxage=60, stale-while-revalidate=300')
+    headers.set('Cache-Control', cacheControl)
     headers.set('X-Content-Type-Options', 'nosniff')
+
+    if (!publicNow) {
+      headers.set('CDN-Cache-Control', 'no-store')
+      headers.set('Vercel-CDN-Cache-Control', 'no-store')
+    }
 
     if (streamed.contentType === 'image/svg+xml') {
       headers.set('Content-Security-Policy', "script-src 'none'")

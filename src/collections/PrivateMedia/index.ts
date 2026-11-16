@@ -1,5 +1,11 @@
 import type { CollectionConfig } from 'payload'
 
+import {
+  FixedToolbarFeature,
+  InlineToolbarFeature,
+  lexicalEditor,
+} from '@payloadcms/richtext-lexical'
+
 import { isAdmin } from '@/access/isAdmin'
 import { isAdminOrActiveFriend } from '@/access/isAdminOrActiveFriend'
 import { vercelPrivateBlobFileHandler } from '@/utilities/vercelPrivateBlobFileHandler'
@@ -7,9 +13,10 @@ import { vercelPrivateBlobFileHandler } from '@/utilities/vercelPrivateBlobFileH
 import { stripMetadata } from '../Media/hooks/stripMetadata'
 
 /**
- * Media used by private content (private stories today, private posts later).
- * Files live in the private blob store and reads require an admin or active
- * friend session, so direct URLs cannot be fetched by anonymous visitors.
+ * Media used by private content: private stories and images of posts that
+ * have left the public window. Files live in the private blob store and reads
+ * require an admin or active friend session, so direct URLs cannot be fetched
+ * by anonymous visitors.
  */
 export const PrivateMedia: CollectionConfig = {
   slug: 'private-media',
@@ -47,6 +54,33 @@ export const PrivateMedia: CollectionConfig = {
     {
       name: 'alt',
       type: 'text',
+    },
+    {
+      name: 'caption',
+      type: 'richText',
+      editor: lexicalEditor({
+        features: ({ rootFeatures }) => {
+          return [...rootFeatures, FixedToolbarFeature(), InlineToolbarFeature()]
+        },
+      }),
+    },
+    {
+      name: 'archiveSourceId',
+      type: 'number',
+      index: true,
+      unique: true,
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'archiveSourceUpdatedAt',
+      type: 'date',
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
+      },
     },
   ],
 }

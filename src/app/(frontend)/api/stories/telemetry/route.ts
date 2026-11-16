@@ -60,6 +60,7 @@ export async function POST(req: Request): Promise<Response> {
             skips: (doc.skips || 0) + (m.skips || 0),
           },
           overrideAccess: true,
+          context: { skipMediaReferenceSync: true },
         })
       })
 
