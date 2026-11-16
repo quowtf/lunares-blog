@@ -8,6 +8,7 @@ import {
   getReadingTime,
 } from '@/utilities/archive'
 
+import { getPostHeroMedia } from '@/utilities/archive/getPostHeroMedia'
 import { PostHeroImage } from './post-hero-image'
 import { PostHeader } from './post-header'
 import { PostMetadata, PostNavigation } from './post-metadata'
@@ -36,7 +37,7 @@ export function PostView({ adjacent, post, related }: PostViewProps) {
   const readingTime = getReadingTime(plainText) ?? '1 min'
   const date = formatPostMetaDate(post.publishedAt ?? post.createdAt)
   const categoryLabel = getPostCategoryLabel(post)
-  const heroImage = post.heroImage
+  const heroImage = getPostHeroMedia(post)
   const hasHeroImage = heroImage && typeof heroImage === 'object'
 
   return (

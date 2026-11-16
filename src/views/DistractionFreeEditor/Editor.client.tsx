@@ -151,10 +151,12 @@ function convertUploadsToPlaceholders(content: Record<string, unknown>): Record<
       }
     }
 
-    // Convert to a paragraph with our marker format
+    // Convert to a paragraph with our marker format. Relation comes first so
+    // private-media uploads survive the round trip; legacy markers keep the
+    // old `{{upload:id:filename[:caption]}}` shape.
     const marker = caption
-      ? `{{upload:${mediaId}:${relationTo}:${caption}}}`
-      : `{{upload:${mediaId}:${relationTo}}}`
+      ? `{{upload:${relationTo}:${mediaId}:${caption}}}`
+      : `{{upload:${relationTo}:${mediaId}}}`
 
     return {
       type: 'paragraph',

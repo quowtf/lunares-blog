@@ -1,13 +1,13 @@
-import type { Media as MediaType } from '@/payload-types'
+import type { Media as MediaType, PrivateMedia } from '@/payload-types'
 
 import { Media } from '@/components/Media'
 import RichText from '@/components/RichText'
 
 type PostHeroImageProps = {
-  image: MediaType
+  image: MediaType | PrivateMedia
 }
 
-function getCaptionText(image: MediaType): string | null {
+function getCaptionText(image: MediaType | PrivateMedia): string | null {
   if (image.alt?.trim()) return image.alt.trim()
   return null
 }

@@ -6,6 +6,7 @@ import { getVariantByIndex } from '@/components/archive/ui/card/card-variants'
 import { formatArchiveDate } from './formatArchiveDate'
 import { getGalleryImagesFromPost } from './getGalleryImagesFromPost'
 import { getPostExcerpt } from './getPostExcerpt'
+import { getPostHeroMedia } from './getPostHeroMedia'
 import { mediaToImageAsset } from './mediaToImageAsset'
 
 export type RodadaPostData = Pick<
@@ -14,8 +15,10 @@ export type RodadaPostData = Pick<
   | 'title'
   | 'slug'
   | 'heroImage'
+  | 'privateHeroImage'
   | 'content'
   | 'galleryImages'
+  | 'privateGalleryImages'
   | 'PostType'
   | 'publishedAt'
   | 'createdAt'
@@ -34,7 +37,7 @@ export function mapPostToRodadaItem(
   if (images.length === 0) return null
 
   // heroImage for the route silhouette — fall back to first gallery image if missing
-  const heroImage = mediaToImageAsset(post.heroImage) ?? images[0]
+  const heroImage = mediaToImageAsset(getPostHeroMedia(post)) ?? images[0]
   if (!heroImage) return null
 
   const content = getPostExcerpt(post)

@@ -2,6 +2,7 @@ import type { Post } from '@/payload-types'
 import type { CafeBadge, CafeItem, CardVariant } from '@/types/archive'
 import { getVariantByIndex } from '@/components/archive/ui/card/card-variants'
 import { formatArchiveDate } from './formatArchiveDate'
+import { getPostHeroMedia } from './getPostHeroMedia'
 import { mediaToImageAsset } from './mediaToImageAsset'
 
 export type CafePostData = Pick<
@@ -9,6 +10,7 @@ export type CafePostData = Pick<
   | 'id'
   | 'title'
   | 'heroImage'
+  | 'privateHeroImage'
   | 'PostType'
   | 'publishedAt'
   | 'createdAt'
@@ -28,7 +30,7 @@ export function mapPostToCafeItem(
 ): CafeItem | null {
   if (!post.title) return null
 
-  const image = mediaToImageAsset(post.heroImage) ?? undefined
+  const image = mediaToImageAsset(getPostHeroMedia(post)) ?? undefined
 
   const badges: CafeBadge[] = []
   if (Array.isArray(post.coffeeTags)) {

@@ -25,13 +25,16 @@ export const MediaBlock: React.FC<Props> = (props) => {
     enableGutter = true,
     imgClassName,
     media,
+    privateMedia,
     size = 'full',
     staticImage,
     disableInnerContainer,
   } = props
 
+  const resolvedMedia = privateMedia ?? media
+
   let caption
-  if (media && typeof media === 'object') caption = media.caption
+  if (resolvedMedia && typeof resolvedMedia === 'object') caption = resolvedMedia.caption
 
   const resolvedSize = size ?? 'full'
   const resolvedAlignment = 'center'
@@ -66,10 +69,10 @@ export const MediaBlock: React.FC<Props> = (props) => {
           needsAlignment && (alignmentClasses[resolvedAlignment] || alignmentClasses.center),
         )}
       >
-        {(media || staticImage) && (
+        {(resolvedMedia || staticImage) && (
           <Media
             imgClassName={cn('border border-border rounded-[0.5rem]', imgClassName)}
-            resource={media}
+            resource={resolvedMedia}
             src={staticImage}
           />
         )}

@@ -10,7 +10,11 @@ import type { Props as MediaProps } from '../types'
 
 import { cssVariables } from '@/cssVariables'
 import { getMediaUrl } from '@/utilities/getMediaUrl'
-import { getPreferredMediaFile, shouldUseUnoptimizedImage } from '@/utilities/payloadMedia'
+import {
+  getPreferredMediaFile,
+  isMediaRestrictedForImage,
+  shouldUseUnoptimizedImage,
+} from '@/utilities/payloadMedia'
 
 const { breakpoints } = cssVariables
 
@@ -75,7 +79,9 @@ export const ImageMedia: React.FC<MediaProps> = (props) => {
 
     if (preferred) {
       src = getMediaUrl(preferred.url, resource.updatedAt)
-      unoptimized = shouldUseUnoptimizedImage(src, preferred.mimeType)
+      unoptimized =
+        shouldUseUnoptimizedImage(src, preferred.mimeType) ||
+        isMediaRestrictedForImage(resource)
     }
   }
 

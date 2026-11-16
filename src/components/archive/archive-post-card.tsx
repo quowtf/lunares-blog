@@ -9,22 +9,20 @@ import { RodadaCard } from '@/components/archive/cards/rodada-card'
 import { SlidesCard } from '@/components/archive/cards/slides-card'
 import { ThoughtQuoteCard } from '@/components/archive/cards/thought-quote-card'
 import { Media } from '@/components/Media'
+import { formatArchiveDate } from '@/utilities/archive/formatArchiveDate'
+import { getPostCategory } from '@/utilities/archive/getPostCategory'
+import { getPostExcerpt } from '@/utilities/archive/getPostExcerpt'
+import { getPostHeroMedia } from '@/utilities/archive/getPostHeroMedia'
+import { getReadingTimeLabel } from '@/utilities/archive/getReadingTime'
+import { mapPostToCafeItem, type CafePostData } from '@/utilities/archive/mapPostToCafeItem'
 import {
-  archivePostSelect,
-  formatArchiveDate,
-  getPostExcerpt,
-  getPostCategory,
-  getReadingTimeLabel,
-  mapPostToCafeItem,
   mapPostToGalleryItem,
-  mapPostToImageItem,
-  mapPostToRodadaItem,
   mapPostToSlidesItem,
-  type CafePostData,
   type GalleryPostData,
-  type ImagePostData,
-  type RodadaPostData,
-} from '@/utilities/archive'
+} from '@/utilities/archive/mapPostToGalleryItem'
+import { mapPostToImageItem, type ImagePostData } from '@/utilities/archive/mapPostToImageItem'
+import { mapPostToRodadaItem, type RodadaPostData } from '@/utilities/archive/mapPostToRodadaItem'
+import { archivePostSelect } from '@/utilities/archive/postSelect'
 import {
   getVariantByIndex,
   cardBase,
@@ -134,7 +132,7 @@ function ArrowRightIcon({ className }: { className?: string }) {
 function DefaultPostCard({ post, index = 0, priority = false }: ArchivePostCardProps) {
   const isPost = isPostType(post)
   const href = getPostHref(post.slug)
-  const image = post.heroImage ?? post.meta?.image
+  const image = getPostHeroMedia(post) ?? post.meta?.image
   const label = getCategoryLabel(post)
   const date = formatArchiveDate(post.publishedAt ?? post.createdAt)
   const excerpt = getPostExcerpt(post)

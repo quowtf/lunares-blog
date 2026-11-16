@@ -84,9 +84,11 @@ export function ImageUploadPlugin() {
 export function transformUploadMarkers(
   state: { root: { children: Array<Record<string, unknown>>; [key: string]: unknown }; [key: string]: unknown },
 ): typeof state {
-  // Match new format: {{upload:ID:filename}} or {{upload:ID:filename:caption}}
-  const NEW_PATTERN = /^\{\{upload:(\d+):(.+?)(?::(.+))?\}\}$/
-  // Match old format: [img:ID — label]
+  // Current format: {{upload:relationTo:ID[:caption]}}
+  const CURRENT_PATTERN = /^\{\{upload:(media|private-media):(\d+)(?::(.+))?\}\}$/
+  // Legacy format written by the first upload dialog: {{upload:ID:filename[:caption]}}
+  const LEGACY_PATTERN = /^\{\{upload:(\d+):(.+?)(?::(.+))?\}\}$/
+  // Old format: [img:ID — label]
   const OLD_PATTERN = /^\[img:(\d+)\s*—\s*(.+?)\]$/
 
   const transformedChildren = state.root.children.map((node) => {
@@ -102,16 +104,24 @@ export function transformUploadMarkers(
 
     let mediaId: number | null = null
     let caption = ''
+    let relationTo: 'media' | 'private-media' = 'media'
 
-    const newMatch = text.match(NEW_PATTERN)
-    if (newMatch) {
-      mediaId = Number(newMatch[1])
-      caption = newMatch[3] || ''
+    const currentMatch = text.match(CURRENT_PATTERN)
+    if (currentMatch) {
+      relationTo = currentMatch[1] as 'media' | 'private-media'
+      mediaId = Number(currentMatch[2])
+      caption = currentMatch[3] || ''
     } else {
-      const oldMatch = text.match(OLD_PATTERN)
-      if (oldMatch) {
-        mediaId = Number(oldMatch[1])
-        caption = oldMatch[2] || ''
+      const legacyMatch = text.match(LEGACY_PATTERN)
+      if (legacyMatch) {
+        mediaId = Number(legacyMatch[1])
+        caption = legacyMatch[3] || ''
+      } else {
+        const oldMatch = text.match(OLD_PATTERN)
+        if (oldMatch) {
+          mediaId = Number(oldMatch[1])
+          caption = oldMatch[2] || ''
+        }
       }
     }
 
@@ -122,7 +132,7 @@ export function transformUploadMarkers(
       type: 'upload',
       version: 3,
       format: '',
-      relationTo: 'media',
+      relationTo,
       value: mediaId,
       id: crypto.randomUUID(),
       fields: caption

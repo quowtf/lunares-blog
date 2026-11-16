@@ -4,6 +4,7 @@ import { getVariantByIndex } from '@/components/archive/ui/card/card-variants'
 import { formatArchiveDate } from './formatArchiveDate'
 import { getPostCategory } from './getPostCategory'
 import { getPostExcerpt } from './getPostExcerpt'
+import { getPostHeroMedia } from './getPostHeroMedia'
 import { mediaToImageAsset } from './mediaToImageAsset'
 
 export type ImagePostData = Pick<
@@ -12,6 +13,7 @@ export type ImagePostData = Pick<
   | 'title'
   | 'slug'
   | 'heroImage'
+  | 'privateHeroImage'
   | 'content'
   | 'meta'
   | 'categories'
@@ -41,7 +43,8 @@ export function mapPostToImageItem(
   post: ImagePostData,
   options: MapPostToImageItemOptions = {},
 ): ImageItem | null {
-  const image = mediaToImageAsset(post.heroImage) ?? mediaToImageAsset(post.meta?.image ?? null)
+  const image =
+    mediaToImageAsset(getPostHeroMedia(post)) ?? mediaToImageAsset(post.meta?.image ?? null)
 
   if (!image) return null
 

@@ -8,7 +8,15 @@ export const MediaBlock: Block = {
       name: 'media',
       type: 'upload',
       relationTo: 'media',
-      required: true,
+    },
+    {
+      // Populated by the archive task for posts outside the public window.
+      name: 'privateMedia',
+      type: 'upload',
+      relationTo: 'private-media',
+      admin: {
+        hidden: true,
+      },
     },
     {
       type: 'row',

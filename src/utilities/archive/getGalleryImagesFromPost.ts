@@ -1,14 +1,19 @@
-import type { Media, Post } from '@/payload-types'
+import type { Post } from '@/payload-types'
 import type { ImageAsset } from '@/types/archive'
+import type { MediaValue } from '@/utilities/media/mediaValue'
 
+import { getPostGalleryMedia, getPostHeroMedia } from './getPostHeroMedia'
 import { mediaToImageAsset } from './mediaToImageAsset'
 
-type GalleryImagePostData = Pick<Post, 'galleryImages' | 'heroImage' | 'meta'>
+type GalleryImagePostData = Pick<
+  Post,
+  'galleryImages' | 'privateGalleryImages' | 'heroImage' | 'privateHeroImage' | 'meta'
+>
 
 /** Use the 400w 'thumbnail' imageSize for triptych cards (CSS handles 1:1 crop). */
 const GALLERY_ASSET_OPTIONS = { preferredSize: 'thumbnail' } as const
 
-function pushUniqueImage(images: ImageAsset[], media: Media | number | null | undefined) {
+function pushUniqueImage(images: ImageAsset[], media: MediaValue) {
   const asset = mediaToImageAsset(media, GALLERY_ASSET_OPTIONS)
   if (!asset) return
 
@@ -19,14 +24,12 @@ function pushUniqueImage(images: ImageAsset[], media: Media | number | null | un
 export function getGalleryImagesFromPost(post: GalleryImagePostData, limit = 3): ImageAsset[] {
   const images: ImageAsset[] = []
 
-  if (Array.isArray(post.galleryImages)) {
-    for (const media of post.galleryImages) {
-      pushUniqueImage(images, media)
-      if (images.length >= limit) break
-    }
+  for (const media of getPostGalleryMedia(post)) {
+    pushUniqueImage(images, media)
+    if (images.length >= limit) break
   }
 
-  if (images.length < limit) pushUniqueImage(images, post.heroImage)
+  if (images.length < limit) pushUniqueImage(images, getPostHeroMedia(post))
   if (images.length < limit) pushUniqueImage(images, post.meta?.image ?? null)
 
   return images.slice(0, limit)
