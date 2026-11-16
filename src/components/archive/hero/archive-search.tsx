@@ -4,11 +4,16 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import { SearchIcon } from '@/components/archive/ui'
+import { useAuthUser } from '@/components/auth/use-auth-user'
+import { isAdminSession } from '@/utilities/auth/roles'
 import { cn } from '@/utilities/ui'
 
 export function ArchiveSearch({ className }: { className?: string }) {
   const router = useRouter()
   const [query, setQuery] = useState('')
+  const { user, isLoading } = useAuthUser()
+
+  if (isLoading || !isAdminSession(user)) return null
 
   return (
     <form

@@ -1,11 +1,10 @@
 import type { Post, ArchiveBlock as ArchiveBlockProps } from '@/payload-types'
 
-import configPromise from '@payload-config'
-import { getPayload } from 'payload'
 import React from 'react'
 import RichText from '@/components/RichText'
 
 import { CollectionArchive } from '@/components/CollectionArchive'
+import { getPayloadRequest } from '@/utilities/getPayloadRequest'
 
 export const ArchiveBlock: React.FC<
   ArchiveBlockProps & {
@@ -19,7 +18,7 @@ export const ArchiveBlock: React.FC<
   let posts: Post[] = []
 
   if (populateBy === 'collection') {
-    const payload = await getPayload({ config: configPromise })
+    const { payload, req } = await getPayloadRequest()
 
     const flattenedCategories = categories?.map((category) => {
       if (typeof category === 'object') return category.id
@@ -30,6 +29,8 @@ export const ArchiveBlock: React.FC<
       collection: 'posts',
       depth: 1,
       limit,
+      overrideAccess: false,
+      req,
       ...(flattenedCategories && flattenedCategories.length > 0
         ? {
             where: {
@@ -42,13 +43,32 @@ export const ArchiveBlock: React.FC<
     })
 
     posts = fetchedPosts.docs
-  } else {
-    if (selectedDocs?.length) {
-      const filteredSelectedPosts = selectedDocs.map((post) => {
-        if (typeof post.value === 'object') return post.value
-      }) as Post[]
+  } else if (selectedDocs?.length) {
+    const { payload, req } = await getPayloadRequest()
 
-      posts = filteredSelectedPosts
+    const ids = selectedDocs
+      .map((post) => (typeof post.value === 'object' ? post.value?.id : post.value))
+      .filter((postId): postId is number => typeof postId === 'number')
+
+    if (ids.length > 0) {
+      const fetchedPosts = await payload.find({
+        collection: 'posts',
+        depth: 1,
+        limit: ids.length,
+        overrideAccess: false,
+        pagination: false,
+        req,
+        where: {
+          id: {
+            in: ids,
+          },
+        },
+      })
+
+      const postsById = new Map(fetchedPosts.docs.map((post) => [post.id, post]))
+      posts = ids
+        .map((postId) => postsById.get(postId))
+        .filter((post): post is Post => Boolean(post))
     }
   }
 

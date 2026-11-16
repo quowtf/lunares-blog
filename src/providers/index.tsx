@@ -1,5 +1,6 @@
 import React from 'react'
 
+import { AuthSessionRefresh } from './AuthSessionRefresh'
 import { HeaderThemeProvider } from './HeaderTheme'
 import { ThemeProvider } from './Theme'
 
@@ -8,7 +9,9 @@ export const Providers: React.FC<{
 }> = ({ children }) => {
   return (
     <ThemeProvider>
-      <HeaderThemeProvider>{children}</HeaderThemeProvider>
+      <HeaderThemeProvider>
+        <AuthSessionRefresh>{children}</AuthSessionRefresh>
+      </HeaderThemeProvider>
     </ThemeProvider>
   )
 }

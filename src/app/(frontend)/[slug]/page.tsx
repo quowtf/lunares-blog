@@ -10,6 +10,7 @@ import { homeStatic } from '@/endpoints/seed/home-static'
 import { generateMeta } from '@/utilities/generateMeta'
 import { archivePostSelect, getAdjacentPosts } from '@/utilities/archive'
 import type { ArchivePostData } from '@/components/archive/archive-post-card'
+import { getPayloadRequest } from '@/utilities/getPayloadRequest'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import { draftMode } from 'next/headers'
@@ -19,40 +20,9 @@ import type { Post } from '@/payload-types'
 
 import PageClient from './page.client'
 
-export async function generateStaticParams() {
-  const payload = await getPayload({ config: configPromise })
-
-  const [pages, posts] = await Promise.all([
-    payload.find({
-      collection: 'pages',
-      draft: false,
-      limit: 1000,
-      overrideAccess: false,
-      pagination: false,
-      select: { slug: true },
-    }),
-    payload.find({
-      collection: 'posts',
-      draft: false,
-      limit: 1000,
-      overrideAccess: false,
-      pagination: false,
-      select: { slug: true },
-    }),
-  ])
-
-  const slugs = new Set<string>()
-
-  for (const doc of pages.docs) {
-    if (doc.slug && doc.slug !== 'home') slugs.add(doc.slug)
-  }
-
-  for (const doc of posts.docs) {
-    if (doc.slug) slugs.add(doc.slug)
-  }
-
-  return Array.from(slugs).map((slug) => ({ slug }))
-}
+// Post visibility depends on the visitor's session and the current month, so
+// this route must never be served from a shared static cache.
+export const dynamic = 'force-dynamic'
 
 type Args = {
   params: Promise<{
@@ -167,15 +137,16 @@ const queryPageBySlug = cache(async ({ slug }: { slug: string }) => {
 
 const queryPostBySlug = cache(async ({ slug }: { slug: string }) => {
   const { isEnabled: draft } = await draftMode()
-  const payload = await getPayload({ config: configPromise })
+  const { payload, req } = await getPayloadRequest()
 
   const result = await payload.find({
     collection: 'posts',
     depth: 2,
     draft,
     limit: 1,
-    pagination: false,
     overrideAccess: draft,
+    pagination: false,
+    req,
     where: {
       slug: {
         equals: slug,
@@ -187,7 +158,7 @@ const queryPostBySlug = cache(async ({ slug }: { slug: string }) => {
 })
 
 async function queryFallbackRelatedPosts({ excludeSlug }: { excludeSlug: string }) {
-  const payload = await getPayload({ config: configPromise })
+  const { payload, req } = await getPayloadRequest()
 
   const result = await payload.find({
     collection: 'posts',
@@ -195,7 +166,9 @@ async function queryFallbackRelatedPosts({ excludeSlug }: { excludeSlug: string 
     draft: false,
     limit: 3,
     overrideAccess: false,
-    sort: '-publishedAt',
+    pagination: false,
+    req,
+    sort: ['-publishedAt', '-id'],
     select: archivePostSelect,
     where: {
       and: [

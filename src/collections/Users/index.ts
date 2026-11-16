@@ -3,6 +3,7 @@ import type { CollectionConfig, FieldAccess } from 'payload'
 import { enforceFriendDefaults } from './hooks/beforeChange'
 import { beforeLogin } from './hooks/beforeLogin'
 import { notifyRegistration } from './hooks/notifyRegistration'
+import { revokeSessionsOnBlock } from './hooks/revokeSessionsOnBlock'
 import { sendVerificationEmail } from './hooks/sendVerificationEmail'
 
 const isAdminField: FieldAccess = ({ req }) => {
@@ -19,7 +20,14 @@ const isAdminOrSelf: FieldAccess = ({ id, req }) => {
 export const Users: CollectionConfig = {
   slug: 'users',
 
-  auth: true,
+  auth: {
+    // Keep friends signed in for a week; the frontend refreshes this token
+    // while they are active, so the session slides forward on each visit.
+    tokenExpiration: 60 * 60 * 24 * 7,
+    cookies: {
+      secure: process.env.NODE_ENV === 'production',
+    },
+  },
 
   access: {
     admin: ({ req }) => {
@@ -131,7 +139,7 @@ export const Users: CollectionConfig = {
   hooks: {
     beforeLogin: [beforeLogin],
     beforeChange: [enforceFriendDefaults],
-    afterChange: [notifyRegistration, sendVerificationEmail],
+    afterChange: [notifyRegistration, sendVerificationEmail, revokeSessionsOnBlock],
   },
 
   timestamps: true,

@@ -1,8 +1,9 @@
 'use client'
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 
-import { fetchCurrentUser, setAuthCache } from './api'
+import { useAuthUser } from '@/components/auth/use-auth-user'
+
 import type { AuthUser } from './types'
 
 type CommentContextValue = {
@@ -18,32 +19,7 @@ const CommentContext = createContext<CommentContextValue | null>(null)
 
 export function CommentProvider({ children }: { children: React.ReactNode }) {
   const [activePostId, setActivePostId] = useState<string | null>(null)
-  const [user, setUserState] = useState<AuthUser | null>(null)
-  const [isLoadingUser, setIsLoadingUser] = useState(true)
-
-  useEffect(() => {
-    let cancelled = false
-
-    fetchCurrentUser()
-      .then((currentUser) => {
-        if (!cancelled) setUserState(currentUser)
-      })
-      .catch(() => {
-        if (!cancelled) setUserState(null)
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoadingUser(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  const setUser = useCallback((nextUser: AuthUser | null) => {
-    setAuthCache(nextUser)
-    setUserState(nextUser)
-  }, [])
+  const { user, isLoading: isLoadingUser, setUser } = useAuthUser()
 
   const closeComments = useCallback(() => {
     setActivePostId(null)

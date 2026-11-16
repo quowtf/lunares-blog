@@ -5,6 +5,8 @@ type ApiError = {
   errors?: Array<{ message?: string }>
 }
 
+export const AUTH_CHANGE_EVENT = 'lunares:auth-change'
+
 let cachedUser: AuthUser | null | undefined
 let currentUserPromise: Promise<AuthUser | null> | null = null
 
@@ -14,14 +16,22 @@ function getErrorMessage(data: ApiError, fallback: string): string {
   return fallback
 }
 
+function emitAuthChange(user: AuthUser | null) {
+  if (typeof window === 'undefined') return
+
+  window.dispatchEvent(new CustomEvent<AuthUser | null>(AUTH_CHANGE_EVENT, { detail: user }))
+}
+
 export function clearAuthCache() {
   cachedUser = undefined
   currentUserPromise = null
+  emitAuthChange(null)
 }
 
 export function setAuthCache(user: AuthUser | null) {
   cachedUser = user
   currentUserPromise = Promise.resolve(user)
+  emitAuthChange(user)
 }
 
 export async function fetchCurrentUser(): Promise<AuthUser | null> {

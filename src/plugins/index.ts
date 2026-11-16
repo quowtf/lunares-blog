@@ -5,6 +5,7 @@ import { redirectsPlugin } from '@payloadcms/plugin-redirects'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import { searchPlugin } from '@payloadcms/plugin-search'
 import { Plugin } from 'payload'
+import { isAdmin } from '@/access/isAdmin'
 import { revalidateRedirects } from '@/hooks/revalidateRedirects'
 import { GenerateTitle, GenerateURL } from '@payloadcms/plugin-seo/types'
 import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
@@ -29,6 +30,7 @@ const generateURL: GenerateURL<Post | Page> = ({ doc }) => {
 export const plugins: Plugin[] = [
   vercelBlobStorage({
     access: getBlobStoreAccess() as 'public',
+    cacheControlMaxAge: 60,
     collections: {
       media: true,
       'private-media': true,
@@ -95,6 +97,12 @@ export const plugins: Plugin[] = [
     collections: ['posts'],
     beforeSync: beforeSyncWithSearch,
     searchOverrides: {
+      access: {
+        create: isAdmin,
+        delete: isAdmin,
+        read: isAdmin,
+        update: isAdmin,
+      },
       fields: ({ defaultFields }) => {
         return [...defaultFields, ...searchFields]
       },

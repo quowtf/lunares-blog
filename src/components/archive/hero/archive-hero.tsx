@@ -1,5 +1,6 @@
 import { ArchiveSearch } from './archive-search'
 import { ArchiveTitleLink } from './archive-title-link'
+import { LoginButton } from './login-button'
 import { NewEntryButtonAuth } from './new-entry-button-auth'
 import { SiteNav } from './site-nav'
 
@@ -18,6 +19,7 @@ export function ArchiveHero() {
 
       <div className="flex flex-col items-start gap-8 md:items-end">
         <nav className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
+          <LoginButton />
           <ArchiveSearch />
           <NewEntryButtonAuth />
         </nav>

@@ -1,9 +1,10 @@
 import type { Metadata } from 'next/types'
+import { notFound } from 'next/navigation'
 
 import { ArchiveHero, ArchivePostCard, Masonry, type ArchivePostData } from '@/components/archive'
 import { archivePostSelect } from '@/utilities/archive'
-import configPromise from '@payload-config'
-import { getPayload } from 'payload'
+import { isAdminSession } from '@/utilities/auth/roles'
+import { getPayloadRequest } from '@/utilities/getPayloadRequest'
 
 type Args = {
   searchParams: Promise<{
@@ -12,15 +13,22 @@ type Args = {
 }
 
 export default async function Page({ searchParams: searchParamsPromise }: Args) {
+  const { payload, req, user } = await getPayloadRequest()
+
+  if (!isAdminSession(user)) {
+    notFound()
+  }
+
   const { q: query } = await searchParamsPromise
-  const payload = await getPayload({ config: configPromise })
 
   const posts = await payload.find({
     collection: 'search',
     depth: 1,
     limit: 24,
-    select: archivePostSelect,
+    overrideAccess: false,
     pagination: false,
+    req,
+    select: archivePostSelect,
     ...(query
       ? {
           where: {
@@ -73,6 +81,14 @@ export default async function Page({ searchParams: searchParamsPromise }: Args) 
 export async function generateMetadata({
   searchParams: searchParamsPromise,
 }: Args): Promise<Metadata> {
+  const { user } = await getPayloadRequest()
+
+  if (!isAdminSession(user)) {
+    return {
+      title: 'Buscar',
+    }
+  }
+
   const { q } = await searchParamsPromise
 
   return {

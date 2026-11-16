@@ -1,30 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useAuthUser } from '@/components/auth/use-auth-user'
+import { isAdminSession } from '@/utilities/auth/roles'
 
 import { NewEntryButton } from './new-entry-button'
 
 export function NewEntryButtonAuth() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const { user, isLoading } = useAuthUser()
 
-  useEffect(() => {
-    let cancelled = false
-
-    fetch('/api/users/me', { credentials: 'include' })
-      .then((response) => response.json())
-      .then((data: { user?: { id?: number } | null }) => {
-        if (!cancelled) setIsAuthenticated(Boolean(data?.user?.id))
-      })
-      .catch(() => {
-        if (!cancelled) setIsAuthenticated(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  if (!isAuthenticated) return null
+  if (isLoading || !isAdminSession(user)) return null
 
   return <NewEntryButton />
 }
