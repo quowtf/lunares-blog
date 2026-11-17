@@ -21,7 +21,16 @@ function pushUniqueImage(images: ImageAsset[], media: MediaValue) {
   if (!exists) images.push(asset)
 }
 
-export function getGalleryImagesFromPost(post: GalleryImagePostData, limit = 3): ImageAsset[] {
+type GalleryImagesOptions = {
+  /** Include hero and meta images when there are not enough gallery images. */
+  includeFallbacks?: boolean
+}
+
+export function getGalleryImagesFromPost(
+  post: GalleryImagePostData,
+  limit = 3,
+  { includeFallbacks = true }: GalleryImagesOptions = {},
+): ImageAsset[] {
   const images: ImageAsset[] = []
 
   for (const media of getPostGalleryMedia(post)) {
@@ -29,8 +38,13 @@ export function getGalleryImagesFromPost(post: GalleryImagePostData, limit = 3):
     if (images.length >= limit) break
   }
 
-  if (images.length < limit) pushUniqueImage(images, getPostHeroMedia(post))
-  if (images.length < limit) pushUniqueImage(images, post.meta?.image ?? null)
+  if (includeFallbacks && images.length < limit) {
+    pushUniqueImage(images, getPostHeroMedia(post))
+  }
+
+  if (includeFallbacks && images.length < limit) {
+    pushUniqueImage(images, post.meta?.image ?? null)
+  }
 
   return images.slice(0, limit)
 }

@@ -34,17 +34,19 @@ export async function createTextPost({
   publishedAt,
 }: CreateTextPostArgs): Promise<Post> {
   const author = await resolveAdminUser(payload)
+  const cleanTitle = title.trim()
+  const cleanContent = content.trim()
 
   return payload.create({
     collection: 'posts',
     data: {
-      title,
-      content: textToLexical(content),
+      title: cleanTitle,
+      content: textToLexical(cleanContent),
       PostType: postType,
       _status: 'published',
       publishedAt,
       authors: [author.id],
-      slug: buildSlug(postType, title, publishedAt),
+      slug: buildSlug(postType, cleanTitle, publishedAt),
     },
     overrideAccess: true,
     user: author,

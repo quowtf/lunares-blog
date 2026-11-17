@@ -5,6 +5,7 @@ import { slugify } from 'payload/shared'
 import type { Post } from '@/payload-types'
 
 import { resolveAdminUser } from './author'
+import { resolveCategoryId } from './category'
 import type { ProcessedImage } from './images'
 import { textToLexical } from './lexical'
 
@@ -14,6 +15,7 @@ const MAX_ALT_LENGTH = 200
 type CreateImagePostArgs = {
   payload: Payload
   image: ProcessedImage
+  category?: string
   title?: string
   content?: string
   publishedAt: string
@@ -32,7 +34,7 @@ function buildSlug(
   const base =
     (slugify(title ?? '') || slugify(truncate(content ?? '', MAX_SLUG_BASE_LENGTH)) || 'image')
       .slice(0, MAX_SLUG_BASE_LENGTH)
-      .replace(/-+$/, '') || 'image'
+      .replace(/^-+|-+$/g, '') || 'image'
 
   const date = publishedAt.slice(0, 10).replace(/-/g, '')
   const suffix = randomUUID().slice(0, 4)
@@ -51,16 +53,25 @@ function buildAlt(image: ProcessedImage, title?: string, content?: string): stri
 export async function createImagePost({
   payload,
   image,
+  category,
   title,
   content,
   publishedAt,
 }: CreateImagePostArgs): Promise<Post> {
   const author = await resolveAdminUser(payload)
+  const cleanTitle = title?.trim() || undefined
+  const cleanContent = content?.trim() || undefined
+  const cleanCategory = category?.trim() || undefined
+  const categoryId = await resolveCategoryId({
+    payload,
+    category: cleanCategory,
+    user: author,
+  })
 
   const media = await payload.create({
     collection: 'media',
     data: {
-      alt: buildAlt(image, title, content),
+      alt: buildAlt(image, cleanTitle, cleanContent),
     },
     file: {
       name: image.filename,
@@ -80,9 +91,10 @@ export async function createImagePost({
       publishedAt,
       authors: [author.id],
       heroImage: media.id,
-      ...(title ? { title } : {}),
-      ...(content ? { content: textToLexical(content) } : {}),
-      slug: buildSlug(title, content, publishedAt),
+      ...(categoryId ? { categories: [categoryId] } : {}),
+      ...(cleanTitle ? { title: cleanTitle } : {}),
+      ...(cleanContent ? { content: textToLexical(cleanContent) } : {}),
+      slug: buildSlug(cleanTitle, cleanContent, publishedAt),
     },
     overrideAccess: true,
     user: author,

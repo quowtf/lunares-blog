@@ -7,6 +7,8 @@ import { getServerSideURL } from '@/utilities/getURL'
 import { checkPublishAuth } from '@/utilities/publish/auth'
 import { createGalleryPost } from '@/utilities/publish/createGalleryPost'
 import { createImagePost } from '@/utilities/publish/createImagePost'
+import { createRodadaPost } from '@/utilities/publish/createRodadaPost'
+import { createSlidesPost } from '@/utilities/publish/createSlidesPost'
 import { createTextPost } from '@/utilities/publish/createTextPost'
 import { parsePublicationDate } from '@/utilities/publish/date'
 import { processImageFile, type ProcessedImage } from '@/utilities/publish/images'
@@ -14,6 +16,19 @@ import { normalizePostType, type PublishPostType } from '@/utilities/publish/val
 
 const MAX_GALLERY_IMAGES = 3
 const IMAGE_FIELDS = ['image', 'heroImage', 'imagen', 'file']
+const RODADA_HERO_FIELDS = ['ihero', 'imageHero', 'imagehero', 'heroImage', 'imagen', 'image']
+const RODADA_IMAGE_FIELDS = ['image1', 'image2', 'image3', 'images1', 'images2', 'images3', 'files']
+const SLIDES_IMAGE_FIELDS = [
+  'image1',
+  'image2',
+  'image3',
+  'images1',
+  'images2',
+  'images3',
+  'images',
+  'files',
+  'image',
+]
 const GALLERY_IMAGE_FIELDS = [
   'images1',
   'images2',
@@ -69,13 +84,25 @@ function getImageFiles(formData: FormData): UploadedImageField[] {
   )
 }
 
-function getSingleImageFile(formData: FormData): File | null {
-  for (const field of IMAGE_FIELDS) {
+function getFirstImageFile(formData: FormData, fields: string[]): File | null {
+  for (const field of fields) {
     const file = formData.get(field)
     if (file !== null && isFile(file)) return file
   }
 
   return null
+}
+
+function getSingleImageFile(formData: FormData): File | null {
+  return getFirstImageFile(formData, IMAGE_FIELDS)
+}
+
+function getRodadaImageFiles(formData: FormData): File[] {
+  return RODADA_IMAGE_FIELDS.flatMap((field) => formData.getAll(field).filter(isFile))
+}
+
+function getSlidesImageFiles(formData: FormData): File[] {
+  return SLIDES_IMAGE_FIELDS.flatMap((field) => formData.getAll(field).filter(isFile))
 }
 
 function isDryRun(req: Request): boolean {
@@ -128,7 +155,7 @@ async function handleJson(req: Request): Promise<Response> {
   const postType = normalizePostType(rawPost)
 
   if (!postType) {
-    return errorResponse('Invalid post type. Use "t", "q", "g" or "i".', 400)
+    return errorResponse('Invalid post type. Use "t", "q", "g", "i", "r" or "s".', 400)
   }
 
   if (postType === 'gallery') {
@@ -137,6 +164,17 @@ async function handleJson(req: Request): Promise<Response> {
 
   if (postType === 'image') {
     return errorResponse('Image posts require multipart/form-data with an image', 400)
+  }
+
+  if (postType === 'rodada') {
+    return errorResponse(
+      'Rodada posts require multipart/form-data with ihero and optional image1-3',
+      400,
+    )
+  }
+
+  if (postType === 'slides') {
+    return errorResponse('Slides posts require multipart/form-data with 1-3 images', 400)
   }
 
   const title = readString(data.title)
@@ -209,6 +247,7 @@ async function handleImageMultipart(
 
   const title = readFormString(formData, ['title', 'titulo', 'título'])
   const content = readFormString(formData, ['content', 'contenido', 'caption', 'text'])
+  const category = readFormString(formData, ['category', 'categories', 'taxonomy', 'tag', 'label'])
   const rawDate = readFormString(formData, ['date', 'fecha-de-publicacion', 'publishedAt'])
   const { publishedAt, dateFallback } = parsePublicationDate(rawDate)
 
@@ -220,6 +259,7 @@ async function handleImageMultipart(
         post: rawPost || null,
         title: title || null,
         content: content || null,
+        category: category || null,
         date: rawDate || null,
         fields: Array.from(formData.keys()),
         image: {
@@ -232,6 +272,7 @@ async function handleImageMultipart(
         type: 'image',
         title: title || null,
         content: content || null,
+        category: category || null,
         publishedAt,
         dateFallback,
       },
@@ -251,6 +292,7 @@ async function handleImageMultipart(
     const post = await createImagePost({
       payload,
       image,
+      category: category || undefined,
       title: title || undefined,
       content: content || undefined,
       publishedAt,
@@ -262,6 +304,8 @@ async function handleImageMultipart(
       dateFallback,
       extra: {
         heroImage: post.heroImage ? toMediaId(post.heroImage) : null,
+        categories:
+          post.categories?.map((item) => (typeof item === 'number' ? item : item.id)) ?? [],
       },
     })
   } catch (error) {
@@ -270,6 +314,214 @@ async function handleImageMultipart(
     console.error({
       err,
       message: 'Error creating image post',
+      stack: err.stack,
+    })
+
+    return errorResponse(err.message, 500)
+  }
+}
+
+async function handleRodadaMultipart(
+  req: Request,
+  formData: FormData,
+  rawPost: string,
+): Promise<Response> {
+  const heroImageFile = getFirstImageFile(formData, RODADA_HERO_FIELDS)
+
+  if (!heroImageFile) {
+    return errorResponse('Missing ihero image', 400)
+  }
+
+  const imageFiles = getRodadaImageFiles(formData)
+
+  if (imageFiles.length > MAX_GALLERY_IMAGES) {
+    return errorResponse('Maximum 3 gallery images allowed', 400)
+  }
+
+  const title = readFormString(formData, ['title', 'titulo', 'título'])
+  if (!title) {
+    return errorResponse('Missing title', 400)
+  }
+
+  const content = readFormString(formData, ['content', 'contenido', 'caption', 'text'])
+  if (!content) {
+    return errorResponse('Missing content', 400)
+  }
+
+  const rawDate = readFormString(formData, ['date', 'fecha-de-publicacion', 'publishedAt'])
+  const { publishedAt, dateFallback } = parsePublicationDate(rawDate)
+
+  if (isDryRun(req)) {
+    return Response.json({
+      success: true,
+      dryRun: true,
+      received: {
+        post: rawPost || null,
+        title,
+        content,
+        date: rawDate || null,
+        fields: Array.from(formData.keys()),
+        ihero: {
+          name: heroImageFile.name,
+          size: heroImageFile.size,
+          type: heroImageFile.type,
+        },
+        images: imageFiles.map((file) => ({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+        })),
+      },
+      normalized: {
+        type: 'rodada',
+        title,
+        content,
+        publishedAt,
+        dateFallback,
+        imageCount: imageFiles.length,
+      },
+    })
+  }
+
+  let processed: ProcessedImage[]
+
+  try {
+    processed = await Promise.all([
+      processImageFile(heroImageFile, { preserveAlpha: true }),
+      ...imageFiles.map((file) => processImageFile(file)),
+    ])
+  } catch (error) {
+    return errorResponse(`Invalid image: ${(error as Error).message}`, 400)
+  }
+
+  const [heroImage, ...images] = processed
+
+  try {
+    const payload = await getPayload({ config })
+    const post = await createRodadaPost({
+      payload,
+      heroImage,
+      images,
+      title,
+      content,
+      publishedAt,
+    })
+
+    return successResponse({
+      post,
+      type: 'rodada',
+      dateFallback,
+      extra: {
+        heroImage: post.heroImage ? toMediaId(post.heroImage) : null,
+        images: post.galleryImages?.map(toMediaId) ?? [],
+      },
+    })
+  } catch (error) {
+    const err = error as Error
+
+    console.error({
+      err,
+      message: 'Error creating rodada post',
+      stack: err.stack,
+    })
+
+    return errorResponse(err.message, 500)
+  }
+}
+
+async function handleSlidesMultipart(
+  req: Request,
+  formData: FormData,
+  rawPost: string,
+): Promise<Response> {
+  const imageFiles = getSlidesImageFiles(formData)
+
+  if (imageFiles.length === 0) {
+    return errorResponse('Missing images. Send 1 to 3.', 400)
+  }
+
+  if (imageFiles.length > MAX_GALLERY_IMAGES) {
+    return errorResponse('Maximum 3 images allowed', 400)
+  }
+
+  const title = readFormString(formData, ['title', 'titulo', 'título'])
+  if (!title) {
+    return errorResponse('Missing title', 400)
+  }
+
+  const content = readFormString(formData, ['content', 'contenido', 'caption', 'text'])
+  if (!content) {
+    return errorResponse('Missing content', 400)
+  }
+
+  const category = readFormString(formData, ['category', 'categories', 'taxonomy', 'tag', 'label'])
+  const rawDate = readFormString(formData, ['date', 'fecha-de-publicacion', 'publishedAt'])
+  const { publishedAt, dateFallback } = parsePublicationDate(rawDate)
+
+  if (isDryRun(req)) {
+    return Response.json({
+      success: true,
+      dryRun: true,
+      received: {
+        post: rawPost || null,
+        title,
+        content,
+        category: category || null,
+        date: rawDate || null,
+        fields: Array.from(formData.keys()),
+        images: imageFiles.map((file) => ({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+        })),
+      },
+      normalized: {
+        type: 'slides',
+        title,
+        content,
+        category: category || null,
+        publishedAt,
+        dateFallback,
+        imageCount: imageFiles.length,
+      },
+    })
+  }
+
+  let images: ProcessedImage[]
+
+  try {
+    images = await Promise.all(imageFiles.map((file) => processImageFile(file)))
+  } catch (error) {
+    return errorResponse(`Invalid image: ${(error as Error).message}`, 400)
+  }
+
+  try {
+    const payload = await getPayload({ config })
+    const post = await createSlidesPost({
+      payload,
+      images,
+      category: category || undefined,
+      title,
+      content,
+      publishedAt,
+    })
+
+    return successResponse({
+      post,
+      type: 'slides',
+      dateFallback,
+      extra: {
+        images: post.galleryImages?.map(toMediaId) ?? [],
+        categories:
+          post.categories?.map((item) => (typeof item === 'number' ? item : item.id)) ?? [],
+      },
+    })
+  } catch (error) {
+    const err = error as Error
+
+    console.error({
+      err,
+      message: 'Error creating slides post',
       stack: err.stack,
     })
 
@@ -293,8 +545,19 @@ async function handleMultipart(req: Request): Promise<Response> {
     return handleImageMultipart(req, formData, rawPost)
   }
 
+  if (postType === 'rodada') {
+    return handleRodadaMultipart(req, formData, rawPost)
+  }
+
+  if (postType === 'slides') {
+    return handleSlidesMultipart(req, formData, rawPost)
+  }
+
   if (postType !== 'gallery') {
-    return errorResponse('Multipart requires type "g" (gallery) or "i" (image).', 400)
+    return errorResponse(
+      'Multipart requires type "g" (gallery), "i" (image), "r" (rodada) or "s" (slides).',
+      400,
+    )
   }
 
   const uploads = getImageFiles(formData)

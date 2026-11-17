@@ -1,12 +1,6 @@
 import type { RodadaItem } from '@/types/archive'
 
-import {
-  Card,
-  CardSubtitle,
-  CardTitle,
-  ImagePanel,
-  Meta,
-} from '@/components/archive/ui'
+import { Card, CardSubtitle, CardTitle, ImagePanel, Meta } from '@/components/archive/ui'
 import { CommentPanel, CommentTrigger } from '@/components/comments'
 
 type RodadaCardProps = {
@@ -41,18 +35,20 @@ export function RodadaCard({ item, priority = false }: RodadaCardProps) {
           </div>
         ) : null}
 
-        {/* Gallery — 3 square thumbnails like slides */}
-        <div className="grid grid-cols-3 gap-2 px-4">
-          {item.images.slice(0, 3).map((image, index) => (
-            <ImagePanel
-              className="rounded-xl"
-              image={image}
-              key={`${image.src ?? image.alt}-${index}`}
-              priority={priority && index === 0}
-              variant="thumb"
-            />
-          ))}
-        </div>
+        {/* Gallery — up to 3 square thumbnails, optional */}
+        {item.images.length > 0 ? (
+          <div className="grid grid-cols-3 gap-2 px-4">
+            {item.images.slice(0, 3).map((image, index) => (
+              <ImagePanel
+                className="rounded-xl"
+                image={image}
+                key={`${image.src ?? image.alt}-${index}`}
+                priority={priority && index === 0}
+                variant="thumb"
+              />
+            ))}
+          </div>
+        ) : null}
 
         {/* Footer: date + comments */}
         <footer className="flex items-center justify-between px-4 pb-4">

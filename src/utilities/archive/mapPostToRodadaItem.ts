@@ -33,8 +33,9 @@ export function mapPostToRodadaItem(
   post: RodadaPostData,
   options: MapOptions = {},
 ): RodadaItem | null {
-  const images = getGalleryImagesFromPost(post)
-  if (images.length === 0) return null
+  // Rodada thumbnails are only the optional gallery images; the hero must not
+  // be duplicated into the triptych when there are no extras.
+  const images = getGalleryImagesFromPost(post, 3, { includeFallbacks: false })
 
   // heroImage for the route silhouette — fall back to first gallery image if missing
   const heroImage = mediaToImageAsset(getPostHeroMedia(post)) ?? images[0]
