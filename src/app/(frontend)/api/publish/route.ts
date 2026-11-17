@@ -6,12 +6,14 @@ import type { Media, Post } from '@/payload-types'
 import { getServerSideURL } from '@/utilities/getURL'
 import { checkPublishAuth } from '@/utilities/publish/auth'
 import { createGalleryPost } from '@/utilities/publish/createGalleryPost'
+import { createImagePost } from '@/utilities/publish/createImagePost'
 import { createTextPost } from '@/utilities/publish/createTextPost'
 import { parsePublicationDate } from '@/utilities/publish/date'
-import { processImageFile } from '@/utilities/publish/images'
+import { processImageFile, type ProcessedImage } from '@/utilities/publish/images'
 import { normalizePostType, type PublishPostType } from '@/utilities/publish/validation'
 
 const MAX_GALLERY_IMAGES = 3
+const IMAGE_FIELDS = ['image', 'heroImage', 'imagen', 'file']
 const GALLERY_IMAGE_FIELDS = [
   'images1',
   'images2',
@@ -67,6 +69,15 @@ function getImageFiles(formData: FormData): UploadedImageField[] {
   )
 }
 
+function getSingleImageFile(formData: FormData): File | null {
+  for (const field of IMAGE_FIELDS) {
+    const file = formData.get(field)
+    if (file !== null && isFile(file)) return file
+  }
+
+  return null
+}
+
 function isDryRun(req: Request): boolean {
   return new URL(req.url).searchParams.get('dryRun') === '1'
 }
@@ -117,11 +128,15 @@ async function handleJson(req: Request): Promise<Response> {
   const postType = normalizePostType(rawPost)
 
   if (!postType) {
-    return errorResponse('Invalid post type. Use "t" or "q".', 400)
+    return errorResponse('Invalid post type. Use "t", "q", "g" or "i".', 400)
   }
 
   if (postType === 'gallery') {
     return errorResponse('Gallery requires multipart/form-data with 1-3 images', 400)
+  }
+
+  if (postType === 'image') {
+    return errorResponse('Image posts require multipart/form-data with an image', 400)
   }
 
   const title = readString(data.title)
@@ -181,6 +196,87 @@ async function handleJson(req: Request): Promise<Response> {
   }
 }
 
+async function handleImageMultipart(
+  req: Request,
+  formData: FormData,
+  rawPost: string,
+): Promise<Response> {
+  const imageFile = getSingleImageFile(formData)
+
+  if (!imageFile) {
+    return errorResponse('Missing image', 400)
+  }
+
+  const title = readFormString(formData, ['title', 'titulo', 'título'])
+  const content = readFormString(formData, ['content', 'contenido', 'caption', 'text'])
+  const rawDate = readFormString(formData, ['date', 'fecha-de-publicacion', 'publishedAt'])
+  const { publishedAt, dateFallback } = parsePublicationDate(rawDate)
+
+  if (isDryRun(req)) {
+    return Response.json({
+      success: true,
+      dryRun: true,
+      received: {
+        post: rawPost || null,
+        title: title || null,
+        content: content || null,
+        date: rawDate || null,
+        fields: Array.from(formData.keys()),
+        image: {
+          name: imageFile.name,
+          size: imageFile.size,
+          type: imageFile.type,
+        },
+      },
+      normalized: {
+        type: 'image',
+        title: title || null,
+        content: content || null,
+        publishedAt,
+        dateFallback,
+      },
+    })
+  }
+
+  let image: ProcessedImage
+
+  try {
+    image = await processImageFile(imageFile)
+  } catch (error) {
+    return errorResponse(`Invalid image: ${(error as Error).message}`, 400)
+  }
+
+  try {
+    const payload = await getPayload({ config })
+    const post = await createImagePost({
+      payload,
+      image,
+      title: title || undefined,
+      content: content || undefined,
+      publishedAt,
+    })
+
+    return successResponse({
+      post,
+      type: 'image',
+      dateFallback,
+      extra: {
+        heroImage: post.heroImage ? toMediaId(post.heroImage) : null,
+      },
+    })
+  } catch (error) {
+    const err = error as Error
+
+    console.error({
+      err,
+      message: 'Error creating image post',
+      stack: err.stack,
+    })
+
+    return errorResponse(err.message, 500)
+  }
+}
+
 async function handleMultipart(req: Request): Promise<Response> {
   let formData: FormData
 
@@ -193,8 +289,12 @@ async function handleMultipart(req: Request): Promise<Response> {
   const rawPost = readFormString(formData, ['post', 'tipo-de-post', 'type'])
   const postType = normalizePostType(rawPost)
 
+  if (postType === 'image') {
+    return handleImageMultipart(req, formData, rawPost)
+  }
+
   if (postType !== 'gallery') {
-    return errorResponse('Multipart is only supported for gallery posts. Use "g".', 400)
+    return errorResponse('Multipart requires type "g" (gallery) or "i" (image).', 400)
   }
 
   const uploads = getImageFiles(formData)
