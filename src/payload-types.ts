@@ -970,8 +970,13 @@ export interface Activity {
   type: 'bike' | 'coffee' | 'boulder' | 'code';
   occurredAt: string;
   day: string;
+  /**
+   * Boulder: tops. El endpoint acepta tops.fallidos, ej. 11.99.
+   */
   value?: number | null;
-  attempts?: number | null;
+  /**
+   * Intentos fallidos de boulder.
+   */
   failed?: number | null;
   updatedAt: string;
   createdAt: string;
@@ -1668,7 +1673,6 @@ export interface ActivitiesSelect<T extends boolean = true> {
   occurredAt?: T;
   day?: T;
   value?: T;
-  attempts?: T;
   failed?: T;
   updatedAt?: T;
   createdAt?: T;

@@ -4,6 +4,27 @@ export const STAT_TYPES = ['bike', 'coffee', 'boulder', 'code'] as const
 
 export type StatType = (typeof STAT_TYPES)[number]
 
+/**
+ * Aliases accepted by the ingest endpoint. `km` and `gr` carry the unit, so
+ * those two activities need an explicit type. Code and boulder omit type and
+ * are inferred from value: integers are commits, decimals are boulder.
+ */
+const STAT_TYPE_ALIASES: Record<string, StatType> = {
+  bi: 'bike',
+  bici: 'bike',
+  bike: 'bike',
+  km: 'bike',
+  ca: 'coffee',
+  cafe: 'coffee',
+  coffee: 'coffee',
+  gr: 'coffee',
+  bo: 'boulder',
+  boulder: 'boulder',
+  co: 'code',
+  codigo: 'code',
+  code: 'code',
+}
+
 export type StatDetailType = 'completed' | 'failed' | 'average' | 'activeDays'
 
 export type StatDefinition = {
@@ -74,4 +95,16 @@ export const STAT_ORDER: StatType[] = [...STAT_TYPES].sort(
 
 export function isStatType(value: unknown): value is StatType {
   return typeof value === 'string' && (STAT_TYPES as readonly string[]).includes(value)
+}
+
+export function parseStatType(value: unknown): StatType | null {
+  if (typeof value !== 'string') return null
+
+  const key = value
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+
+  return STAT_TYPE_ALIASES[key] ?? null
 }

@@ -3,23 +3,26 @@ import { APIError } from 'payload'
 import { revalidatePath } from 'next/cache'
 
 import type { Activity } from '@/payload-types'
-import { isStatType } from '@/utilities/stats/config'
+import { parseStatType } from '@/utilities/stats/config'
 import { parseActivityDate } from '@/utilities/stats/date'
+import {
+  isDecimalValue,
+  parseBoulderValue,
+  toNonNegativeNumber,
+} from '@/utilities/stats/numbers'
 
 type CollectionEndpoint = Exclude<NonNullable<CollectionConfig['endpoints']>, false>[number]
 
 const INGEST_PATH = '/ingest'
 
 type IngestBody = {
-  attempts?: unknown
   date?: unknown
-  failed?: unknown
   type?: unknown
   value?: unknown
 }
 
 type IngestData = Pick<Activity, 'day' | 'occurredAt' | 'type'> &
-  Partial<Pick<Activity, 'attempts' | 'failed' | 'value'>>
+  Partial<Pick<Activity, 'failed' | 'value'>>
 
 export const ingestActivity: CollectionEndpoint = {
   path: INGEST_PATH,
@@ -42,9 +45,17 @@ export const ingestActivity: CollectionEndpoint = {
       throw new APIError('Body inválido.', 400)
     }
 
-    if (!isStatType(body.type)) {
-      throw new APIError('type inválido.', 400)
+    const rawType = typeof body.type === 'string' ? body.type.trim() : body.type
+    const hasType = rawType !== undefined && rawType !== null && rawType !== ''
+    const explicitType = parseStatType(rawType)
+
+    if (hasType && !explicitType) {
+      throw new APIError('type inválido. Usa km o gr; omite type para code/boulder.', 400)
     }
+
+    // Integer value means code commits; decimal value means boulder attempts.
+    const inferredType = isDecimalValue(body.value) ? 'boulder' : 'code'
+    const type = explicitType ?? inferredType
 
     const date = parseActivityDate(body.date)
 
@@ -52,17 +63,28 @@ export const ingestActivity: CollectionEndpoint = {
       throw new APIError('date inválida. Usa YYYY-MM-DD.', 400)
     }
 
+    const boulder = type === 'boulder' ? parseBoulderValue(body.value) : null
+
+    if (type === 'boulder' && !boulder) {
+      throw new APIError('Boulder requiere value como tops.fallidos, ej. 11.99.', 422)
+    }
+
+    const value = boulder ? boulder.tops : toNonNegativeNumber(body.value)
+
+    if (value === null) {
+      throw new APIError('value inválido.', 422)
+    }
+
+    if (type === 'code' && !Number.isInteger(value)) {
+      throw new APIError('code requiere value entero.', 422)
+    }
+
     const data: IngestData = {
       day: date.day,
       occurredAt: date.occurredAt,
-      type: body.type,
-    }
-
-    if (body.type === 'boulder') {
-      data.attempts = body.attempts as number
-      data.failed = body.failed as number
-    } else {
-      data.value = body.value as number
+      type,
+      value,
+      ...(boulder ? { failed: boulder.failed } : {}),
     }
 
     const activity = await req.payload.create({
@@ -74,19 +96,18 @@ export const ingestActivity: CollectionEndpoint = {
 
     revalidatePath('/')
 
+    const storedValue = activity.value ?? 0
+    const failed = activity.type === 'boulder' ? (activity.failed ?? 0) : null
+
     return Response.json(
       {
         ok: true,
         id: activity.id,
         type: activity.type,
         day: activity.day,
-        value: activity.value,
-        attempts: activity.attempts ?? null,
-        failed: activity.failed ?? null,
-        completed:
-          typeof activity.attempts === 'number' && typeof activity.failed === 'number'
-            ? activity.attempts - activity.failed
-            : null,
+        value: storedValue,
+        failed,
+        total: failed === null ? storedValue : storedValue + failed,
       },
       { status: 201 },
     )

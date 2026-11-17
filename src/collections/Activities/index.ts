@@ -22,7 +22,7 @@ export const Activities: CollectionConfig = {
     update: isAdmin,
   },
   admin: {
-    defaultColumns: ['type', 'day', 'value', 'attempts', 'failed'],
+    defaultColumns: ['type', 'day', 'value', 'failed'],
     group: 'Stats',
     useAsTitle: 'type',
   },
@@ -63,17 +63,8 @@ export const Activities: CollectionConfig = {
       type: 'number',
       min: 0,
       admin: {
-        condition: (_, siblingData) => siblingData?.type !== 'boulder',
+        description: 'Boulder: tops. El endpoint acepta tops.fallidos, ej. 11.99.',
         step: 0.01,
-      },
-    },
-    {
-      name: 'attempts',
-      type: 'number',
-      min: 0,
-      admin: {
-        condition: (_, siblingData) => siblingData?.type === 'boulder',
-        step: 1,
       },
     },
     {
@@ -82,6 +73,7 @@ export const Activities: CollectionConfig = {
       min: 0,
       admin: {
         condition: (_, siblingData) => siblingData?.type === 'boulder',
+        description: 'Intentos fallidos de boulder.',
         step: 1,
       },
     },

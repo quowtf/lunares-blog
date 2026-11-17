@@ -211,7 +211,7 @@ function buildWeeklyValue(activities: Activity[], length: number): StatValue[] {
     const index = Math.floor((Number(activity.day.slice(8, 10)) - 1) / 7)
 
     if (index >= 0 && index < weeks.length) {
-      weeks[index] = (weeks[index] ?? 0) + (activity.value ?? 0)
+      weeks[index] = (weeks[index] ?? 0) + getActivityTotal(activity)
     }
   }
 
@@ -226,10 +226,9 @@ function buildWeeklyBoulder(
   const weeks: StatValue[] = Array.from({ length: Math.ceil(length / 7) }, () => null)
 
   for (const activity of activities) {
-    if (typeof activity.attempts !== 'number' || typeof activity.failed !== 'number') continue
-
     const index = Math.floor((Number(activity.day.slice(8, 10)) - 1) / 7)
-    const value = field === 'completed' ? activity.attempts - activity.failed : activity.failed
+    const value =
+      field === 'completed' ? (activity.value ?? 0) : (activity.failed ?? 0)
 
     if (index >= 0 && index < weeks.length) {
       weeks[index] = (weeks[index] ?? 0) + value
@@ -239,8 +238,14 @@ function buildWeeklyBoulder(
   return weeks
 }
 
+function getActivityTotal(activity: Activity): number {
+  const value = activity.value ?? 0
+
+  return activity.type === 'boulder' ? value + (activity.failed ?? 0) : value
+}
+
 function sumValue(activities: Activity[]): number {
-  return activities.reduce((sum, activity) => sum + (activity.value ?? 0), 0)
+  return activities.reduce((sum, activity) => sum + getActivityTotal(activity), 0)
 }
 
 function buildDetails(
@@ -252,7 +257,9 @@ function buildDetails(
   if (!definition.details || activities.length === 0) return undefined
 
   const activeDays = new Set(
-    activities.filter((activity) => (activity.value ?? 0) > 0).map((activity) => activity.day),
+    activities
+      .filter((activity) => getActivityTotal(activity) > 0)
+      .map((activity) => activity.day),
   ).size
 
   return definition.details.map((detail) => {
@@ -260,14 +267,7 @@ function buildDetails(
       case 'completed':
         return {
           label: detail.label,
-          value: activities.reduce(
-            (sum, activity) =>
-              sum +
-              (typeof activity.attempts === 'number' && typeof activity.failed === 'number'
-                ? activity.attempts - activity.failed
-                : 0),
-            0,
-          ),
+          value: activities.reduce((sum, activity) => sum + (activity.value ?? 0), 0),
         }
       case 'failed':
         return {
