@@ -33,6 +33,8 @@ export function mediaToImageAsset(
         return {
           alt: doc.alt || '',
           src,
+          width: sizeData.width ?? undefined,
+          height: sizeData.height ?? undefined,
           unoptimized:
             shouldUseUnoptimizedImage(src, sizeData.mimeType) ||
             isMediaRestrictedForImage(doc),
@@ -50,6 +52,8 @@ export function mediaToImageAsset(
   return {
     alt: doc.alt || '',
     src,
+    width: doc.width ?? undefined,
+    height: doc.height ?? undefined,
     unoptimized:
       shouldUseUnoptimizedImage(src, preferred.mimeType) || isMediaRestrictedForImage(doc),
   }

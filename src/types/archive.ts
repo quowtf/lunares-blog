@@ -10,6 +10,9 @@ export type ImageAsset = {
   src?: string
   tone?: ImageTone
   unoptimized?: boolean
+  /** Natural dimensions, when known. Used to pick cover vs contain treatments. */
+  width?: number
+  height?: number
 }
 
 type BaseArchiveItem = {
