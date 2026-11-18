@@ -8,8 +8,7 @@ import { RenderBlocks } from '@/blocks/RenderBlocks'
 import { RenderHero } from '@/heros/RenderHero'
 import { homeStatic } from '@/endpoints/seed/home-static'
 import { generateMeta } from '@/utilities/generateMeta'
-import { archivePostSelect, getAdjacentPosts } from '@/utilities/archive'
-import type { ArchivePostData } from '@/components/archive/archive-post-card'
+import { getAdjacentPosts } from '@/utilities/archive'
 import { getPayloadRequest } from '@/utilities/getPayloadRequest'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
@@ -32,14 +31,6 @@ type Args = {
 
 function isEditorialPost(post: Post): boolean {
   return post.PostType === 'post' || post.PostType == null
-}
-
-function getRelatedPosts(post: Post): ArchivePostData[] {
-  const related = post.relatedPosts ?? []
-
-  return related
-    .filter((item): item is Post => typeof item === 'object' && item !== null)
-    .slice(0, 3) as ArchivePostData[]
 }
 
 export default async function Page({ params: paramsPromise }: Args) {
@@ -66,20 +57,14 @@ export default async function Page({ params: paramsPromise }: Args) {
   }
 
   if (post && isEditorialPost(post)) {
-    const [adjacent, fallbackRelated] = await Promise.all([
-      getAdjacentPosts(post.slug),
-      queryFallbackRelatedPosts({ excludeSlug: post.slug }),
-    ])
-
-    const related = getRelatedPosts(post)
-    const relatedPosts = related.length > 0 ? related : fallbackRelated
+    const adjacent = await getAdjacentPosts(post.slug)
 
     return (
       <CommentLayout>
         <PageClient theme="light" />
         <PayloadRedirects disableNotFound url={url} />
         {draft && <LivePreviewListener />}
-        <PostView adjacent={adjacent} post={post} related={relatedPosts} />
+        <PostView adjacent={adjacent} post={post} />
       </CommentLayout>
     )
   }
@@ -156,29 +141,3 @@ const queryPostBySlug = cache(async ({ slug }: { slug: string }) => {
 
   return (result.docs?.[0] as Post | undefined) || null
 })
-
-async function queryFallbackRelatedPosts({ excludeSlug }: { excludeSlug: string }) {
-  const { payload, req } = await getPayloadRequest()
-
-  const result = await payload.find({
-    collection: 'posts',
-    depth: 1,
-    draft: false,
-    limit: 3,
-    overrideAccess: false,
-    pagination: false,
-    req,
-    sort: ['-publishedAt', '-id'],
-    select: archivePostSelect,
-    where: {
-      and: [
-        { slug: { not_equals: excludeSlug } },
-        {
-          or: [{ PostType: { equals: 'post' } }, { PostType: { exists: false } }],
-        },
-      ],
-    },
-  })
-
-  return result.docs as ArchivePostData[]
-}

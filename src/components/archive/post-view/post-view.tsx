@@ -1,6 +1,5 @@
 import type { Post } from '@/payload-types'
 
-import type { ArchivePostData } from '@/components/archive/archive-post-card'
 import {
   formatPostMetaDate,
   getPostCategoryLabel,
@@ -13,7 +12,6 @@ import { PostHeroImage } from './post-hero-image'
 import { PostHeader } from './post-header'
 import { PostMetadata, PostNavigation } from './post-metadata'
 import { PostReadingProgress } from './post-reading-progress'
-import { PostRelated } from './post-related'
 import { PostRichText } from './post-rich-text'
 import { PostSiteFooter } from './post-site-footer'
 
@@ -23,14 +21,13 @@ type PostViewProps = {
     next: { slug: string; title: string } | null
   }
   post: Post
-  related: ArchivePostData[]
 }
 
 function isPostType(post: Post): boolean {
   return post.PostType === 'post' || post.PostType == null
 }
 
-export function PostView({ adjacent, post, related }: PostViewProps) {
+export function PostView({ adjacent, post }: PostViewProps) {
   if (!isPostType(post)) return null
 
   const plainText = getPostPlainText(post.content)
@@ -80,7 +77,6 @@ export function PostView({ adjacent, post, related }: PostViewProps) {
 
             <PostMetadata post={post} />
             <PostNavigation next={adjacent.next} prev={adjacent.prev} />
-            <PostRelated posts={related} />
             <PostSiteFooter />
           </div>
         </div>
