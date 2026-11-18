@@ -59,7 +59,7 @@ export const STAT_DEFINITIONS: Record<StatType, StatDefinition> = {
     icon: 'coffee',
     inputMode: 'value',
     order: 2,
-    title: 'Gramos de café molidos',
+    title: 'Café molido',
     tone: 'clay',
     unit: 'g',
   },
@@ -72,7 +72,7 @@ export const STAT_DEFINITIONS: Record<StatType, StatDefinition> = {
     icon: 'boulder',
     inputMode: 'boulder',
     order: 3,
-    title: 'Intentos de boulder',
+    title: 'Intentos en boulder',
     tone: 'slate',
   },
   code: {
@@ -84,7 +84,7 @@ export const STAT_DEFINITIONS: Record<StatType, StatDefinition> = {
     icon: 'git',
     inputMode: 'value',
     order: 4,
-    title: 'Frecuencia de código publicado',
+    title: 'Código publicado',
     tone: 'gold',
   },
 }

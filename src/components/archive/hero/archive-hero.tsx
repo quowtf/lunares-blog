@@ -1,14 +1,12 @@
-import { ArchiveSearch } from './archive-search'
 import { ArchiveTitleLink } from './archive-title-link'
-import { LoginButton } from './login-button'
-import { NewEntryButtonAuth } from './new-entry-button-auth'
+import { HeroActions } from './hero-actions'
 import { SiteNav } from './site-nav'
 
 export function ArchiveHero() {
   return (
-    <header className="grid gap-8 md:grid-cols-[1fr_auto] md:items-start">
+    <header className="relative grid gap-4 md:grid-cols-[1fr_auto] md:items-start md:gap-8">
       <div className="space-y-4">
-        <h1 className="font-serif text-6xl leading-none tracking-[0.12em] text-foreground sm:text-7xl md:text-8xl">
+        <h1 className="font-serif text-6xl leading-none tracking-[0.12em] text-foreground max-[359px]:text-5xl sm:text-7xl md:text-8xl">
           <ArchiveTitleLink />
         </h1>
         <p className="max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
@@ -17,22 +15,7 @@ export function ArchiveHero() {
         <SiteNav />
       </div>
 
-      <div className="flex flex-col items-start gap-8 md:items-end">
-        <nav className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
-          <LoginButton />
-          <ArchiveSearch />
-          <NewEntryButtonAuth />
-        </nav>
-
-        {/* <figure className="max-w-64 text-left md:text-right">
-          <blockquote className="font-serif text-base leading-6 text-foreground">
-            We do not remember days, we remember moments.
-          </blockquote>
-          <figcaption className="mt-2 text-xs text-muted-foreground">
-            &mdash; Cesare Pavese
-          </figcaption>
-        </figure> */}
-      </div>
+      <HeroActions />
     </header>
   )
 }

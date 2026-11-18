@@ -15,6 +15,16 @@ export type ImageAsset = {
   height?: number
 }
 
+/** Serializable descriptor for opening the archive lightbox. */
+export type LightboxTarget = {
+  images: ImageAsset[]
+  index: number
+  /** `sizes` used by the card, so the lightbox reuses the same cached srcset URL. */
+  sizes?: string
+  /** Post title (or date when the post has no title). Shown once per group. */
+  caption?: string
+}
+
 type BaseArchiveItem = {
   id: string
   date: string
@@ -66,7 +76,12 @@ export type RodadaItem = BaseArchiveItem & {
   images: ImageAsset[]
 }
 
-export type ArchiveItemType = ImageItem['type'] | GalleryItem['type'] | SlidesItem['type'] | CafeItem['type'] | RodadaItem['type']
+export type ArchiveItemType =
+  | ImageItem['type']
+  | GalleryItem['type']
+  | SlidesItem['type']
+  | CafeItem['type']
+  | RodadaItem['type']
 
 export function isImageItem(item: { type: string }): item is ImageItem {
   return item.type === 'image'

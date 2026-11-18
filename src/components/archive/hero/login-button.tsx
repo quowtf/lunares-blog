@@ -11,16 +11,21 @@ import { cn } from '@/utilities/ui'
 
 type LoginButtonProps = {
   className?: string
+  /** Show only the icon on small screens. */
+  compact?: boolean
   label?: string
   panelAlign?: 'end' | 'start'
+  panelClassName?: string
   panelPlacement?: 'bottom' | 'top'
   panelTitle?: string
 }
 
 export function LoginButton({
   className,
+  compact = false,
   label = 'Iniciar sesión',
   panelAlign = 'start',
+  panelClassName,
   panelPlacement = 'bottom',
   panelTitle = 'Inicia sesión',
 }: LoginButtonProps = {}) {
@@ -69,15 +74,18 @@ export function LoginButton({
       <button
         aria-controls={isOpen ? panelId : undefined}
         aria-expanded={isOpen}
+        aria-label={label}
         className={cn(
           'inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-full border border-input bg-background px-5 text-sm font-medium text-foreground transition hover:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          compact && 'w-10 px-0 sm:w-auto sm:px-5',
           className,
         )}
         onClick={togglePanel}
+        title={compact ? label : undefined}
         type="button"
       >
         <LogIn aria-hidden="true" className="h-4 w-4" />
-        {label}
+        <span className={cn(compact && 'hidden sm:inline')}>{label}</span>
       </button>
 
       {isOpen ? (
@@ -88,6 +96,7 @@ export function LoginButton({
             panelAlign === 'end'
               ? 'left-0 right-auto sm:left-auto sm:right-0'
               : 'left-0 right-auto',
+            panelClassName,
             panelPlacement === 'top' ? 'bottom-full mb-2' : 'top-full mt-2',
           )}
           id={panelId}

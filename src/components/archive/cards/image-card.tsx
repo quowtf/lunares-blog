@@ -20,7 +20,12 @@ export function ImageCard({ item, priority = false }: ImageCardProps) {
     <div>
       <Card className="w-full overflow-hidden p-0" variant={item.variant}>
         <div className="relative">
-          <ImagePanel image={item.image} priority={priority} variant="natural" />
+          <ImagePanel
+            image={item.image}
+            lightbox={{ caption: item.title || item.date, images: [item.image], index: 0 }}
+            priority={priority}
+            variant="natural"
+          />
 
           <div
             aria-hidden="true"

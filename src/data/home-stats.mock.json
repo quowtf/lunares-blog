@@ -17,7 +17,7 @@
     },
     {
       "id": "cafe",
-      "title": "Gramos de café molidos",
+      "title": "Café molido",
       "icon": "coffee",
       "value": 1240,
       "unit": "g",
@@ -31,7 +31,7 @@
     },
     {
       "id": "boulder",
-      "title": "Intentos de boulder",
+      "title": "Intentos en boulder",
       "icon": "boulder",
       "value": 186,
       "delta": 14,
@@ -51,7 +51,7 @@
     },
     {
       "id": "commits",
-      "title": "Frecuencia de código publicado",
+      "title": "Código publicado",
       "icon": "git",
       "value": 84,
       "delta": 18,

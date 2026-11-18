@@ -7,9 +7,16 @@ type ImageTriptychProps = {
   images: ImageAsset[]
   className?: string
   priority?: boolean
+  /** Post title, or date when the post has no title. */
+  caption?: string
 }
 
-export function ImageTriptych({ images, className, priority = false }: ImageTriptychProps) {
+export function ImageTriptych({
+  images,
+  className,
+  priority = false,
+  caption,
+}: ImageTriptychProps) {
   const displayImages = images.slice(0, 3)
 
   if (displayImages.length === 0) return null
@@ -21,6 +28,7 @@ export function ImageTriptych({ images, className, priority = false }: ImageTrip
           className="rounded-xl"
           image={image}
           key={`${image.src ?? image.alt}-${index}`}
+          lightbox={{ images: displayImages, index, caption }}
           priority={priority && index === 0}
           variant="square"
         />

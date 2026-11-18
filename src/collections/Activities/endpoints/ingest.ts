@@ -117,7 +117,7 @@ export const ingestActivity: CollectionEndpoint = {
 function isAuthorized(req: PayloadRequest): boolean {
   if (req.user?.role === 'admin') return true
 
-  const secret = process.env.STATS_INGEST_SECRET
+  const secret = process.env.STORIES_SECRET
   if (!secret) return false
 
   return req.headers.get('authorization') === `Bearer ${secret}`

@@ -9,6 +9,7 @@ import React from 'react'
 
 import PlausibleProvider from 'next-plausible'
 
+import { LightboxProvider } from '@/components/archive/ui/lightbox/lightbox-provider'
 import { Providers } from '@/providers'
 import { InitTheme } from '@/providers/Theme/InitTheme'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
@@ -50,7 +51,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body>
         <PlausibleProvider enabled={process.env.NODE_ENV === 'production'}>
-          <Providers>{children}</Providers>
+          <Providers>
+            <LightboxProvider>{children}</LightboxProvider>
+          </Providers>
         </PlausibleProvider>
       </body>
     </html>

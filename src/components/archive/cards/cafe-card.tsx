@@ -42,7 +42,12 @@ export function CafeCard({ item, priority = false }: CafeCardProps) {
     <div>
       <Card className="w-full overflow-hidden p-0" variant={item.variant}>
         {item.image ? (
-          <ImagePanel image={item.image} priority={priority} variant="square" />
+          <ImagePanel
+            image={item.image}
+            lightbox={{ caption: item.title, images: [item.image], index: 0 }}
+            priority={priority}
+            variant="square"
+          />
         ) : null}
 
         <div className="space-y-2 p-4">
@@ -59,9 +64,10 @@ export function CafeCard({ item, priority = false }: CafeCardProps) {
 
           <CardTitle>{item.title}</CardTitle>
 
-
           <footer className="flex items-center justify-between">
-            <CardSubtitle>{item.origin} &bull; {item.process}</CardSubtitle>
+            <CardSubtitle>
+              {item.origin} &bull; {item.process}
+            </CardSubtitle>
             <CommentTrigger postId={item.id} />
           </footer>
         </div>

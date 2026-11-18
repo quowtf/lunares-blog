@@ -1,6 +1,4 @@
-import Image from 'next/image'
-
-import type { CardVariant, ImageAsset, RodadaItem } from '@/types/archive'
+import type { CardVariant, ImageAsset, LightboxTarget, RodadaItem } from '@/types/archive'
 
 import { Card, CardSubtitle, CardTitle, ImagePanel, Meta } from '@/components/archive/ui'
 import { CommentPanel, CommentTrigger } from '@/components/comments'
@@ -20,30 +18,28 @@ function RodadaHero({
   image,
   priority,
   variant,
+  lightbox,
 }: {
   image: ImageAsset
   priority: boolean
   variant: CardVariant
+  lightbox: LightboxTarget
 }) {
   // Route maps are wide and transparent, so they are contained to keep the
   // whole trace visible. Portrait/square photos fill the same frame instead of
   // shrinking to a thin strip in the middle.
-  const isPortrait =
-    image.width != null && image.height != null && image.height > image.width
+  const isPortrait = image.width != null && image.height != null && image.height > image.width
 
   return (
     <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted/30">
-      {image.src ? (
-        <Image
-          alt={image.alt}
-          className={isPortrait ? 'object-cover' : 'object-contain p-3'}
-          fill
-          priority={priority}
-          sizes="(min-width: 1024px) 320px, 100vw"
-          src={image.src}
-          unoptimized={image.unoptimized}
-        />
-      ) : null}
+      <ImagePanel
+        className="h-full w-full"
+        fit={isPortrait ? 'cover' : 'contain'}
+        image={image}
+        lightbox={lightbox}
+        priority={priority}
+        variant="wide"
+      />
 
       <div
         aria-hidden="true"
@@ -59,6 +55,8 @@ function RodadaHero({
 }
 
 export function RodadaCard({ item, priority = false }: RodadaCardProps) {
+  const lightboxImages = [item.heroImage, ...item.images]
+
   return (
     <div>
       <Card className="space-y-4 overflow-hidden p-0" variant={item.variant}>
@@ -70,6 +68,7 @@ export function RodadaCard({ item, priority = false }: RodadaCardProps) {
         {/* Hero: route silhouette or photo banner, always inside the same frame */}
         <RodadaHero
           image={item.heroImage}
+          lightbox={{ caption: item.title, images: lightboxImages, index: 0 }}
           priority={priority}
           variant={item.variant ?? 'default'}
         />
@@ -89,6 +88,7 @@ export function RodadaCard({ item, priority = false }: RodadaCardProps) {
                 className="rounded-xl"
                 image={image}
                 key={`${image.src ?? image.alt}-${index}`}
+                lightbox={{ caption: item.title, images: lightboxImages, index: index + 1 }}
                 priority={priority && index === 0}
                 variant="thumb"
               />

@@ -147,7 +147,7 @@ function BarsChart({ chart, tone }: BarsChartProps) {
   const max = Math.max(...numericValues([...previousValues, ...currentTotals]), 1)
 
   return (
-    <div className="flex h-full min-h-16 items-end justify-center gap-2 sm:gap-3">
+    <div className="flex h-full min-h-16 items-end justify-center gap-2 sm:gap-4">
       {Array.from({ length: weeks }, (_, index) => {
         const previous = previousValues[index]
         const completed = chart.current.completed[index]
@@ -156,10 +156,10 @@ function BarsChart({ chart, tone }: BarsChartProps) {
         const total = hasCurrent ? completed + failed : 0
 
         return (
-          <div className="flex h-full items-end justify-center gap-[1px]" key={index}>
+          <div className="flex h-full items-end justify-center gap-[2px]" key={index}>
             {typeof previous === 'number' ? (
               <span
-                className="w-[0.48rem] shrink-0 rounded-t-[2px] border border-dashed sm:w-[0.6rem]"
+                className="w-[0.56rem] shrink-0 rounded-t-[2px] border border-dashed sm:w-[0.72rem]"
                 style={{
                   borderColor: accent,
                   height: `${Math.max(6, (previous / max) * 100)}%`,
@@ -170,7 +170,7 @@ function BarsChart({ chart, tone }: BarsChartProps) {
 
             {hasCurrent ? (
               <span
-                className="flex w-[0.62rem] shrink-0 flex-col justify-end overflow-hidden rounded-t-[2px] sm:w-[0.8rem]"
+                className="flex w-[0.72rem] shrink-0 flex-col justify-end overflow-hidden rounded-t-[2px] sm:w-[0.95rem]"
                 style={{ height: `${Math.max(6, (total / max) * 100)}%` }}
               >
                 <span

@@ -1,14 +1,7 @@
 import type { SlidesItem } from '@/types/archive'
 import { CommentPanel, CommentTrigger } from '@/components/comments'
 
-import {
-  Card,
-  CardSubtitle,
-  CardTitle,
-  Eyebrow,
-  ImagePanel,
-  Meta,
-} from '@/components/archive/ui'
+import { Card, CardSubtitle, CardTitle, Eyebrow, ImagePanel, Meta } from '@/components/archive/ui'
 
 type SlidesCardProps = {
   item: SlidesItem
@@ -18,35 +11,38 @@ type SlidesCardProps = {
 export function SlidesCard({ item, priority = false }: SlidesCardProps) {
   return (
     <div>
+      <Card className="space-y-4 p-5" variant={item.variant}>
+        <header className="space-y-2">
+          {item.label ? <Eyebrow>{item.label}</Eyebrow> : null}
+          <div>
+            {item.title ? <CardTitle>{item.title}</CardTitle> : null}
+            {item.content ? <CardSubtitle>{item.content}</CardSubtitle> : null}
+          </div>
+        </header>
 
-    <Card className="space-y-4 p-5" variant={item.variant}>
-      <header className="space-y-2">
-        {item.label ? <Eyebrow>{item.label}</Eyebrow> : null}
-        <div>
-          {item.title ? <CardTitle>{item.title}</CardTitle> : null}
-          {item.content ? <CardSubtitle>{item.content}</CardSubtitle> : null}
+        <div className="grid grid-cols-3 gap-2">
+          {item.images.slice(0, 3).map((image, index) => (
+            <ImagePanel
+              className="rounded-xl"
+              image={image}
+              key={`${image.src ?? image.alt}-${index}`}
+              lightbox={{
+                caption: item.title || item.date,
+                images: item.images,
+                index,
+              }}
+              priority={priority && index === 0}
+              variant="thumb"
+            />
+          ))}
         </div>
-      </header>
 
-      <div className="grid grid-cols-3 gap-2">
-        {item.images.slice(0, 3).map((image, index) => (
-          <ImagePanel
-            className="rounded-xl"
-            image={image}
-            key={`${image.src ?? image.alt}-${index}`}
-            priority={priority && index === 0}
-            variant="thumb"
-          />
-        ))}
-      </div>
-
-      <footer className="flex items-center justify-between">
-        <Meta>{item.date}</Meta>
-        <CommentTrigger postId={item.id} />
-      </footer>
-
-    </Card>
-    <CommentPanel postId={item.id} />
+        <footer className="flex items-center justify-between">
+          <Meta>{item.date}</Meta>
+          <CommentTrigger postId={item.id} />
+        </footer>
+      </Card>
+      <CommentPanel postId={item.id} />
     </div>
   )
 }

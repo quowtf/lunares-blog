@@ -10,5 +10,5 @@ type GalleryCardProps = {
 export function GalleryCard({ item, priority = false }: GalleryCardProps) {
   if (!item.images.length) return null
 
-  return <ImageTriptych images={item.images} priority={priority} />
+  return <ImageTriptych caption={item.date} images={item.images} priority={priority} />
 }

@@ -1,6 +1,7 @@
 export { Card, cardBase, cardVariants, getVariantByIndex } from './card'
 export { ImagePanel } from './image'
 export { ImageTriptych } from './image-triptych'
+export { LightboxProvider, useLightbox } from './lightbox/lightbox-provider'
 export { CommentIcon, DotsIcon, SearchIcon } from './icons'
 export { Masonry } from './masonry'
 export { CardSubtitle, CardTitle, Eyebrow, Meta } from './typography'
