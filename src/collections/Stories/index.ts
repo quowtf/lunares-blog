@@ -73,7 +73,7 @@ export const Stories: CollectionConfig = {
       defaultValue: 'public',
       admin: {
         description:
-          'Las historias privadas expiran siempre a las 6 horas y solo las ven el admin y los amigos activos.',
+          'Las historias privadas expiran siempre a las 12 horas y solo las ven el admin y los amigos activos.',
       },
       options: [
         {
@@ -99,7 +99,7 @@ export const Stories: CollectionConfig = {
       type: 'select',
       defaultValue: '24',
       admin: {
-        // Irrelevant for private stories: they always expire after 6 hours
+        // Irrelevant for private stories: they always expire after 12 hours
         condition: (_, siblingData) => siblingData?.visibility !== 'private',
       },
       options: [
@@ -200,7 +200,7 @@ export const Stories: CollectionConfig = {
       type: 'date',
       admin: {
         readOnly: false,
-        description: 'Las historias privadas expiran siempre a las 6 horas.',
+        description: 'Las historias privadas expiran siempre a las 12 horas.',
       },
     },
     // Telemetry fields

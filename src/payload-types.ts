@@ -926,7 +926,7 @@ export interface Story {
   caption?: string | null;
   author: number | User;
   /**
-   * Las historias privadas expiran siempre a las 6 horas y solo las ven el admin y los amigos activos.
+   * Las historias privadas expiran siempre a las 12 horas y solo las ven el admin y los amigos activos.
    */
   visibility?: ('public' | 'private') | null;
   duration?: ('12' | '24' | '48' | '72') | null;
@@ -948,7 +948,7 @@ export interface Story {
     url?: string | null;
   };
   /**
-   * Las historias privadas expiran siempre a las 6 horas.
+   * Las historias privadas expiran siempre a las 12 horas.
    */
   expiresAt?: string | null;
   views?: number | null;

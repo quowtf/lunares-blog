@@ -17,17 +17,17 @@ function computePublicExpiresAt(
 }
 
 /**
- * - create private → now + 6h (ignores `duration`)
+ * - create private → now + 12h (ignores `duration`)
  * - create public  → createdAt + `duration`
  * - update private → conserve original `expiresAt`; ignore `duration` / manual `expiresAt`
- * - update public→private → fresh now + 6h window
+ * - update public→private → fresh now + 12h window
  * - update private→public → createdAt + `duration`
  * - update public → manual `expiresAt` wins, then `duration` change recalculates, else unchanged
  */
 export const computeExpiresAt: CollectionBeforeChangeHook = ({ data, operation, originalDoc }) => {
   if (operation === 'create') {
     if (data.visibility === 'private') {
-      // Private stories must always expire 6h after creation. Ignore any
+      // Private stories must always expire 12h after creation. Ignore any
       // manual `expiresAt` supplied by the client.
       data.expiresAt = plusHours(Date.now(), PRIVATE_STORY_DURATION_HOURS)
     } else if (!data.expiresAt) {
@@ -43,11 +43,11 @@ export const computeExpiresAt: CollectionBeforeChangeHook = ({ data, operation, 
     if (nextVisibility === 'private') {
       if (originalVisibility === 'private') {
         // Already private: conserve the original expiry, ignore duration/expiresAt edits.
-        // Legacy private docs without an expiry get a fresh 6h window.
+        // Legacy private docs without an expiry get a fresh 12h window.
         data.expiresAt =
           originalDoc?.expiresAt ?? plusHours(Date.now(), PRIVATE_STORY_DURATION_HOURS)
       } else {
-        // Public → private: fresh 6h window
+        // Public → private: fresh 12h window
         data.expiresAt = plusHours(Date.now(), PRIVATE_STORY_DURATION_HOURS)
       }
       return data

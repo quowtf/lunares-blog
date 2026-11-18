@@ -26,8 +26,10 @@ export async function POST(req: Request): Promise<Response> {
     const formData = await req.formData()
 
     const caption = formData.get('caption') as string | null
-    const rawVisibility = formData.get('visibility')
-    const visibility = rawVisibility === 'private' ? 'private' : 'public'
+    // Every story created through this endpoint is private. Ignore any
+    // `visibility` sent by the client so the media never lands in the public
+    // `media` collection.
+    const visibility = 'private' as const
     let imageFile = formData.get('image') as File | null
 
     if (!imageFile) {
@@ -80,18 +82,11 @@ export async function POST(req: Request): Promise<Response> {
       size: buffer.length,
     }
 
-    const mediaDoc =
-      visibility === 'private'
-        ? await payload.create({
-            collection: 'private-media',
-            data: mediaData,
-            file: mediaFile,
-          })
-        : await payload.create({
-            collection: 'media',
-            data: mediaData,
-            file: mediaFile,
-          })
+    const mediaDoc = await payload.create({
+      collection: 'private-media',
+      data: mediaData,
+      file: mediaFile,
+    })
 
     // Get the first admin user as author (assumed to be the owner)
     const users = await payload.find({
@@ -114,13 +109,12 @@ export async function POST(req: Request): Promise<Response> {
     const story = await payload.create({
       collection: 'stories',
       data: {
-        ...(visibility === 'private'
-          ? { privateImage: mediaDoc.id }
-          : { image: mediaDoc.id }),
+        privateImage: mediaDoc.id,
         caption: caption || '',
         author: authorId,
         visibility,
-        duration: '24',
+        // Irrelevant for private stories: computeExpiresAt always uses 12h.
+        duration: '12',
       } as unknown as Story,
     })
 
